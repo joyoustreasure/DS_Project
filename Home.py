@@ -81,6 +81,7 @@ else:
         st.write("Find answers to common questions.")
         create_faq_section()
     # 희진아 여기에 example을 추가해라
+    # 희진아 일요일 18시까지 해라.
     elif app_choice == "Question Type Examples 📚":
         st.title("📚 Question Type Examples")
         st.write("Explore different types of questions you can create.")
