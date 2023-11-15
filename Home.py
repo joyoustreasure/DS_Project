@@ -1,7 +1,7 @@
 import streamlit as st
 from hashlib import sha256
-from generator import question  # 예시로 generator.py 파일에서 create_question 함수를 임포트합니다.
-from FAQ import create_faq_section  # 예시로 Eng.py 파일에서 create_faq_section 함수를 임포트합니다.
+from generator import question 
+from FAQ import create_faq_section
 from print import print_exam
 
 # 페이지 설정
