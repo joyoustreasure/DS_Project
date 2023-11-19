@@ -3,6 +3,7 @@ from hashlib import sha256
 from generator import question 
 from FAQ import create_faq_section
 from print import print_exam
+import feedback  # 피드백 모듈 임포트
 
 # 페이지 설정
 st.set_page_config(
@@ -52,7 +53,7 @@ else:
     st.sidebar.title("Menu")
     app_choice = st.sidebar.radio(
         "Choose the App", 
-        ["Home 🏡", "Create Questions 📝", "Print Exam 🖨️", "Frequently Asked Questions ❓", "Question Type Examples 📚"]
+        ["Home 🏡", "Create Questions 📝", "Print Exam 🖨️", "Frequently Asked Questions ❓", "Question Type Examples 📚", "User Feedback 🗣️"]
     )
 
     # 홈 화면 내용을 표시합니다.
@@ -61,6 +62,13 @@ else:
         st.title("👩‍🏫 3355's Exam Creation Lab!")
         st.markdown("Empowering English Educators")
         st.markdown("Welcome, dedicated educators! Our Exam Creation Lab is specifically designed to assist you in crafting comprehensive English exams. With our platform, you can easily generate various types of questions that cater to all aspects of language learning.")
+        
+        # 최근 업데이트 및 공지사항 섹션
+        st.subheader("📢 Recent Updates & Announcements")
+        st.markdown("🆕 **New Feature**: Now you can use features for user feedback.")
+        st.markdown("📅 **Upcoming Event**: Join us on preparing 3355's show case")
+        st.markdown("🔔 **Reminder**: Don't forget to final test day")
+
         st.subheader("Diverse Question Types")
         st.write("Dive into a plethora of question types ranging from grammar-focused fill-in-the-blanks to critical thinking multiple-choice questions. Our system supports creating questions for reading comprehension, vocabulary enhancement, and writing proficiency.")
         st.subheader("Maximizing Study Outcomes")
@@ -110,3 +118,7 @@ else:
 
         st.write("--Flow--")
         st.write("Since their introduction, information systems have substantially changed the way business is conducted. ① This is particularly true for business in the shape and form of cooperation between firms that involves an integration of value chains across multiple units. ② The resulting networks do not only cover the business units of a single firm but typically also include multiple units from different firms. ③ As a consequence, firms do not only need to consider their internal organization in order to ensure sustainable business performance; they also need to take into account the entire ecosystem of units surrounding them. ④ Many major companies are fundamentally changing their business models by focusing on profitable units and cutting off less profitable ones. ⑤ In order to allow these different units to cooperate successfully, the existence of a common platform is crucial.")
+    # 사용자 피드백 메뉴 옵션 처리
+    elif app_choice == "User Feedback 🗣️":
+        feedback.show_feedback_form()
+        feedback.display_feedback_board()
