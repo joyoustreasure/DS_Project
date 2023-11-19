@@ -1,6 +1,7 @@
 import streamlit as st
 import openai
-
+import matplotlib.pyplot as plt
+# 필요한 추가 라이브러리 임포트
 
 def question():
     # OpenAI API 키를 설정합니다.
@@ -34,6 +35,18 @@ def question():
         generated_question = generate_question(question_type, difficulty, topic)
         st.session_state['generated_question'] = generated_question
 
+        # 데이터 수집 및 저장
+        if 'question_data' not in st.session_state:
+            st.session_state['question_data'] = {'types': [], 'difficulties': [], 'topics': []}
+        st.session_state['question_data']['types'].append(question_type)
+        st.session_state['question_data']['difficulties'].append(difficulty)
+        st.session_state['question_data']['topics'].append(topic if topic else "General")
+
+    # 시각화 기능 추가
+    if st.button("Show Question Stats"):
+        if 'question_data' in st.session_state:
+            visualize_question_data(st.session_state['question_data'])
+
     # 생성된 문제 표시 및 저장 로직
     if 'generated_question' in st.session_state:
         st.text_area("Generated Question", st.session_state['generated_question'], height=300)
@@ -61,6 +74,21 @@ def generate_question(question_type, difficulty, topic):
         )
     return gpt_response['choices'][0]['message']['content']
 
+# 데이터 시각화 함수
+def visualize_question_data(data):
+    # 문제 유형을 중복 없이 리스트로 변환
+    question_types = list(set(data['types']))
+
+    # 각 유형별로 카운트를 계산
+    type_counts = [data['types'].count(t) for t in question_types]
+
+    # 데이터 시각화
+    fig, ax = plt.subplots()
+    ax.bar(question_types, type_counts)
+    ax.set_title("Question Type Distribution")
+    ax.set_xlabel("Question Type")
+    ax.set_ylabel("Count")
+    st.pyplot(fig)
 
 
     

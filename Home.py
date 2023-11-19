@@ -120,5 +120,7 @@ else:
         st.write("Since their introduction, information systems have substantially changed the way business is conducted. ① This is particularly true for business in the shape and form of cooperation between firms that involves an integration of value chains across multiple units. ② The resulting networks do not only cover the business units of a single firm but typically also include multiple units from different firms. ③ As a consequence, firms do not only need to consider their internal organization in order to ensure sustainable business performance; they also need to take into account the entire ecosystem of units surrounding them. ④ Many major companies are fundamentally changing their business models by focusing on profitable units and cutting off less profitable ones. ⑤ In order to allow these different units to cooperate successfully, the existence of a common platform is crucial.")
     # 사용자 피드백 메뉴 옵션 처리
     elif app_choice == "User Feedback 🗣️":
+        feedback.show_satisfaction_survey()
         feedback.show_feedback_form()
+        #feedback.display_feedback_board()
         feedback.display_feedback_board()
