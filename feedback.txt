@@ -2,3 +2,4 @@ test
 Satisfaction Rating: 3, Comments: nice
 Satisfaction Rating: 9
 test
+Satisfaction Rating: 2
