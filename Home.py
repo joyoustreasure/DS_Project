@@ -4,18 +4,24 @@ from generator import question
 from FAQ import create_faq_section
 from print import print_exam
 import feedback  # 피드백 모듈 임포트
+from pymongo import MongoClient
+
+# MongoDB 연결 설정
+secrets = st.secrets["my_mongodb_credentials"]
+mongodb_connection_string = secrets["mongodb_connection_string"]
+database_name = secrets["database_name"]
+collection_name = "users"
+
+# MongoDB 연결 설정
+client = MongoClient(mongodb_connection_string)
+db = client[database_name]
+users_collection = db[collection_name]
 
 # 페이지 설정
 st.set_page_config(
     page_title="Exam Creation Lab",
     page_icon="📚"
 )
-
-# 사용자 정보 (실제 환경에서는 안전하게 관리해야 함)
-users = {
-    "user1": sha256("password1".encode()).hexdigest(),
-    "user2": sha256("password2".encode()).hexdigest()
-}
 
 # 세션 상태 초기화
 if 'username' not in st.session_state:
@@ -25,7 +31,10 @@ if 'logged_in' not in st.session_state:
 
 # 로그인 상태 확인
 def check_login(username, password):
-    if username in users and users[username] == sha256(password.encode()).hexdigest():
+    # Retrieve user information from MongoDB
+    user_data = users_collection.find_one({"username": username})
+
+    if user_data and user_data["password"] == sha256(password.encode()).hexdigest():
         st.session_state['username'] = username
         st.session_state['logged_in'] = True
         return True
