@@ -1,16 +1,36 @@
 import streamlit as st
+from pymongo import MongoClient
+import hashlib
 
-# 피드백 데이터를 파일로 저장하고 불러오는 함수
+# MongoDB 연결 설정
+secrets = st.secrets["my_mongodb_credentials"]
+mongodb_connection_string = secrets["mongodb_connection_string"]
+database_name = secrets["database_name"]
+collection_name = "feedback"
+
+# MongoDB 연결 설정
+client = MongoClient(mongodb_connection_string)
+db = client[database_name]
+feedback_collection = db[collection_name]
+
+# 세션 상태 초기화
+if 'username' not in st.session_state:
+    st.session_state['username'] = ''
+if 'logged_in' not in st.session_state:
+    st.session_state['logged_in'] = False
+
+# 피드백 데이터를 MongoDB에서 불러오는 함수
 def load_feedback():
-    try:
-        with open("feedback.txt", "r") as file:
-            return file.readlines()
-    except FileNotFoundError:
-        return []
+    feedback_list = feedback_collection.find()
+    return [feedback["content"] for feedback in feedback_list]
 
-def save_feedback(new_feedback):
-    with open("feedback.txt", "a") as file:
-        file.write(new_feedback + "\n")
+# 피드백을 MongoDB에 저장하는 함수
+def save_feedback(username, new_feedback):
+    feedback_data = {
+        "username": username,
+        "content": new_feedback
+    }
+    feedback_collection.insert_one(feedback_data)
 
 def show_feedback_form():
     with st.form("feedback_form"):
@@ -19,7 +39,7 @@ def show_feedback_form():
         submit_button = st.form_submit_button("Submit Feedback")
 
         if submit_button and user_feedback:
-            save_feedback(user_feedback)
+            save_feedback(st.session_state['username'], user_feedback)
             st.success("Thank you for your feedback!")
 
 def show_satisfaction_survey():
@@ -31,7 +51,7 @@ def show_satisfaction_survey():
 
         if submit_button:
             satisfaction_feedback = f"Satisfaction Rating: {rating}"
-            save_feedback(satisfaction_feedback)
+            save_feedback(st.session_state['username'], satisfaction_feedback)
             st.success("Thank you for your feedback!")
 
 def display_feedback_board():
