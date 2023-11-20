@@ -31,6 +31,11 @@ def check_login(username, password):
         return True
     return False
 
+# 회원가입 기능
+def register_user(username, password):
+    hashed_password = sha256(password.encode()).hexdigest()
+    users_collection.insert_one({"username": username, "password": hashed_password})
+
 # 로그인 폼
 def login_form():
     with st.form("login_form"):
@@ -45,9 +50,27 @@ def login_form():
             else:
                 st.error("Incorrect username or password.")
 
+# 회원가입 폼
+def register_form():
+    with st.form("register_form"):
+        new_username = st.text_input("New Username")
+        new_password = st.text_input("New Password", type="password")
+        confirm_password = st.text_input("Confirm Password", type="password")
+        submitted = st.form_submit_button("Register")
+        if submitted:
+            if new_password == confirm_password:
+                register_user(new_username, new_password)
+                st.success("Account created successfully. You can now log in.")
+            else:
+                st.error("Passwords do not match.")
+
 # 로그인 상태가 아니면 로그인 폼을 보여줌
 if not st.session_state['logged_in']:
-    login_form()
+    login_or_register = st.radio("Choose an option", ["Login", "Register"])
+    if login_or_register == "Login":
+        login_form()
+    elif login_or_register == "Register":
+        register_form()
 else:
     # 로그인 후, 사이드바 메뉴 옵션을 보여줍니다.
     st.sidebar.title("Menu")
