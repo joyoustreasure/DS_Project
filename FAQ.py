@@ -5,7 +5,7 @@ from pymongo import MongoClient
 secrets = st.secrets["my_mongodb_credentials"]
 mongodb_connection_string = secrets["mongodb_connection_string"]
 database_name = secrets["database_name"]
-collection_name = secrets["collection_name_faq"]
+collection_name = "faq"
 
 # MongoDB 연결 설정
 client = MongoClient(mongodb_connection_string)
