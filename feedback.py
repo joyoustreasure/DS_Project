@@ -1,17 +1,8 @@
 import streamlit as st
 from pymongo import MongoClient
-import hashlib
+from mongodb_utils import connect_to_mongodb
 
-# MongoDB 연결 설정
-secrets = st.secrets["my_mongodb_credentials"]
-mongodb_connection_string = secrets["mongodb_connection_string"]
-database_name = secrets["database_name"]
-collection_name = "feedback"
-
-# MongoDB 연결 설정
-client = MongoClient(mongodb_connection_string)
-db = client[database_name]
-feedback_collection = db[collection_name]
+feedback_collection = connect_to_mongodb("feedback")
 
 # 세션 상태 초기화
 if 'username' not in st.session_state:
