@@ -1,11 +1,22 @@
 import streamlit as st
+from pymongo import MongoClient
 
-# 여기에 FAQ 데이터를 정의합니다.
-faq_data = {
-    "What is GPT Lab?": "GPT Lab is a user-friendly app that allows anyone to interact with and create their own AI Assistants powered by OpenAI's GPT language model. With GPT Lab, you can interact with pre-built AI Assistants or create your own by specifying a prompt and OpenAI model parameters. Our goal is to make AI accessible and easy to use for everyone, so you can focus on designing your Assistant without worrying about the underlying infrastructure.",
-    "Why use GPT Lab instead of Chat GPT?": "GPT Lab aims to be the GitLab for your favorite prompts, allowing you to save and reuse your favorite prompts as AI Assistants. This eliminates the need to retype the same prompt every time you want to use it. Additionally, you can share your AI Assistants with others without revealing your exact prompt. Since you're using your own OpenAI API key, you don't have to worry about Chat GPT being at capacity.",
-    "What is an OpenAI API Key and why do I need one?": "An OpenAI API key is a unique credential that allows you to interact with OpeAI's GPT models. It also serves as your identifier in GPT Lab, allowing us to remember the AI Assistants you have created.",
-}
+# MongoDB 연결 설정
+secrets = st.secrets["my_mongodb_credentials"]
+mongodb_connection_string = secrets["mongodb_connection_string"]
+database_name = secrets["database_name"]
+collection_name = secrets["collection_name_faq"]
+
+# MongoDB 연결 설정
+client = MongoClient(mongodb_connection_string)
+db = client[database_name]
+collection = db[collection_name]
+
+# MongoDB에서 FAQ 데이터 가져오기
+faq_data_from_mongodb = collection.find()
+
+# FAQ 데이터를 딕셔너리로 변환
+faq_data = {item['question']: item['answer'] for item in faq_data_from_mongodb}
 
 def create_faq_section():
     st.header('General Question')
