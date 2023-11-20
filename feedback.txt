@@ -2,9 +2,5 @@ test
 Satisfaction Rating: 3, Comments: nice
 Satisfaction Rating: 9
 test
-<<<<<<< HEAD
 Satisfaction Rating: 4
 test3
-=======
-Satisfaction Rating: 2
->>>>>>> 00f44d4c67be5bef6f204e5ed35bbbafb901dc01
