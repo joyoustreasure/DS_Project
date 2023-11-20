@@ -4,18 +4,9 @@ from generator import question
 from FAQ import create_faq_section
 from print import print_exam
 import feedback  # 피드백 모듈 임포트
-from pymongo import MongoClient
+from mongodb_utils import connect_to_mongodb
 
-# MongoDB 연결 설정
-secrets = st.secrets["my_mongodb_credentials"]
-mongodb_connection_string = secrets["mongodb_connection_string"]
-database_name = secrets["database_name"]
-collection_name = "users"
-
-# MongoDB 연결 설정
-client = MongoClient(mongodb_connection_string)
-db = client[database_name]
-users_collection = db[collection_name]
+users_collection = connect_to_mongodb("users")
 
 # 페이지 설정
 st.set_page_config(
