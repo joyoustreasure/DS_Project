@@ -13,5 +13,7 @@ print.py : 문제 저장소 및 출력
 
 ## Update
 
-11/20(월) : User feedback 게시판 생성 및 Data 시각화 기능 추가 (~BW)  
-11/21(화) : 회원가입 기능 및 Mongo DB 연결 (~KA)
+|날짜|내용|작성자|
+|---|---|:---:|
+|11/20(월)|User feedback 게시판 생성 및 Data 시각화 기능 추가|BW|  
+|11/21(화)|회원가입 기능 및 Mongo DB 연결|KA|
