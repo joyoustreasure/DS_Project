@@ -1,3 +1,5 @@
+# Home.py
+
 import streamlit as st
 from hashlib import sha256
 from generator import question 
@@ -31,10 +33,18 @@ def check_login(username, password):
         return True
     return False
 
-# 회원가입 기능
-def register_user(username, password):
+def register_user(username, password, word_skill, reading_comprehension, listening_skill, ranked_preferences):
     hashed_password = sha256(password.encode()).hexdigest()
-    users_collection.insert_one({"username": username, "password": hashed_password})
+    # 사용자 정보, 자가 평가 점수 및 순위별 선호도를 데이터베이스에 저장 // Mongo DB에서 아래 Data를 저장
+    users_collection.insert_one({
+        "username": username,
+        "password": hashed_password,
+        "word_skill": word_skill,
+        "reading_comprehension": reading_comprehension,
+        "listening_skill": listening_skill,
+        "ranked_preferences": ranked_preferences
+    })
+
 
 # 로그인 폼
 def login_form():
@@ -45,8 +55,8 @@ def login_form():
         if submitted:
             if check_login(username, password):
                 st.success("Successfully logged in.")
-                st.session_state['logged_in'] = True  # 로그인 상태를 세션 상태에 저장
-                st.experimental_rerun()  # 스크립트를 재실행합니다.
+                st.session_state['logged_in'] = True 
+                st.experimental_rerun() 
             else:
                 st.error("Incorrect username or password.")
 
@@ -56,13 +66,46 @@ def register_form():
         new_username = st.text_input("New Username")
         new_password = st.text_input("New Password", type="password")
         confirm_password = st.text_input("Confirm Password", type="password")
-        submitted = st.form_submit_button("Register")
-        if submitted:
-            if new_password == confirm_password:
-                register_user(new_username, new_password)
-                st.success("Account created successfully. You can now log in.")
-            else:
+
+        # User Survey
+        st.write("## User Survey")
+        question_preference = st.multiselect(
+            "Please rank your preferences for types of English exam questions:",
+            ["Blank_Single", "Blank_Multiple", "Sequence", "Main_Idea"]
+        )
+
+        # Add user survey
+        st.write("### Self-assessment of English Proficiency")
+        word_skill = st.slider("Word Skill", 0, 100, 30)
+        reading_comprehension = st.slider("Reading Comprehension", 0, 100, 40)
+        listening_skill = st.slider("Listening Skill", 0, 100, 30)
+
+        total_score = word_skill + reading_comprehension + listening_skill
+        if total_score > 100:
+            st.error("Total score cannot exceed 100 points. Please adjust it.")
+            submit_button = st.form_submit_button("Sign Up", disabled=True)
+        else:
+            submit_button = st.form_submit_button("Sign Up")
+
+        if submit_button:
+            if not new_username or not new_password or not confirm_password:
+                st.error("Please fill out all fields.")
+            elif new_password != confirm_password:
                 st.error("Passwords do not match.")
+            elif not question_preference:
+                st.error("Please select your preferences before signing up.")
+            else:
+                # Save user information and self-assessment scores to the database // question_preference data 저장 필요
+                ranked_preferences = {}
+                for i, pref in enumerate(question_preference):
+                    ranked_preferences[pref] = i + 1
+                ranked_preferences_list = [pref for pref, _ in sorted(ranked_preferences.items(), key=lambda x: x[1])]
+                register_user(new_username, new_password, word_skill, reading_comprehension, listening_skill, ranked_preferences_list)
+                st.success("Your account has been successfully created. You can now log in.")
+                st.write("Your ranked preferences:")
+                for pref, rank in ranked_preferences.items():
+                    st.write(f"rank {rank}: {pref}")
+
 
 # 로그인 상태가 아니면 로그인 폼을 보여줌
 if not st.session_state['logged_in']:

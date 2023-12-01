@@ -1,39 +1,41 @@
+# generator.py
+
 import streamlit as st
 import openai
 import matplotlib.pyplot as plt
-# 필요한 추가 라이브러리 임포트
 
 def question():
-    # OpenAI API 키를 설정합니다.
+    # OpenAI API 키 설정
     openai.api_key = st.secrets["api_key"]
 
-    # Set the web page title.
+    # 웹 페이지 제목 설정
     st.title("📘 SAT English Question Generator")
 
-    # Deliver the service introduction and welcome greeting to the user.
+    # 서비스 소개 및 환영 인사
     st.subheader("Welcome!")
     st.write("Welcome to the SAT English question generator.")
     st.write("You can improve your English skills by generating various types of questions.")
-    st.write("")
-    
-    # Provide guidance on privacy protection.
+
+    # 개인정보 보호 안내
     st.subheader("Privacy Protection")
     st.write("All data generated here is securely processed to protect your personal information.")
 
-    # Create buttons for each question type, with icons.
+    # 문제 유형 선택 버튼 생성
     st.subheader("Choose Question Type")
 
     # 문제 생성 요구사항 입력
     with st.expander("Define Question Requirements", expanded=False):
-        question_type = st.selectbox("Question Type", ["Fill-in-the-Blank", "Multiple Choice", "True/False"])
+        question_type = st.selectbox("Question Type", ["Blank_Single", "Blank_Multiple", "Sequence", "Main_Idea"])
         difficulty = st.select_slider("Voca Difficulty", options=['Level 1', 'Level 2', 'Level 3', 'Level 4', 'Level 5'])
         topic = st.text_input("Topic")
         submit_button = st.button("Submit Requirements")
 
-    # 문제 생성 로직
-    if submit_button:
-        generated_question = generate_question(question_type, difficulty, topic)
-        st.session_state['generated_question'] = generated_question
+        # 문제 생성 로직
+        if submit_button:
+            generated_question, options, correct_answer = generate_question(question_type, difficulty, topic)
+            st.session_state['generated_question'] = generated_question
+            st.session_state['correct_answer'] = correct_answer
+            st.session_state['options'] = options
 
         # 데이터 수집 및 저장
         if 'question_data' not in st.session_state:
@@ -47,21 +49,31 @@ def question():
         if 'question_data' in st.session_state:
             visualize_question_data(st.session_state['question_data'])
 
-    # 생성된 문제 표시 및 저장 로직
-    if 'generated_question' in st.session_state:
+    # 생성된 문제 및 객관식 답안 선택 표시
+    if 'generated_question' in st.session_state and 'options' in st.session_state:
         st.text_area("Generated Question", st.session_state['generated_question'], height=300)
+        selected_option = st.radio("Choose an answer", st.session_state['options'])
+        submit_answer = st.button("Submit Answer")
+
+        # 답안 제출 및 평가
+        if submit_answer:
+            if selected_option == st.session_state['correct_answer']:
+                st.success("Correct!")
+            else:
+                st.error("Incorrect! The correct answer was: " + st.session_state['correct_answer'])
+
+        # 문제 저장
         if st.button('Save Question'):
             if 'questions' not in st.session_state:
                 st.session_state['questions'] = []
             st.session_state['questions'].append(st.session_state['generated_question'])
-            del st.session_state['generated_question']  # 현재 생성된 문제 삭제
-            st.success("Question saved successfully!")
+            del st.session_state['generated_question']
 
 def generate_question(question_type, difficulty, topic):
-    # 문제 유형, 난이도, 주제에 따른 세부적인 프롬프트 생성
-    detailed_prompt = f"Please create a {difficulty} level, {question_type} question about {topic}. Also provide four options and the correct answer."
+    # 객관식 문제 생성 프롬프트
+    detailed_prompt = f"Please create a {difficulty} level, {question_type} question about {topic} with multiple-choice options (A), B), C), D), E)) and the correct answer. Ensure that the answer choices are in uppercase and follow the 5-option multiple-choice format for selection."
 
-    # 시스템 메시지와 사용자의 세부적인 프롬프트를 설정합니다.
+
     messages = [
         {"role": "system", "content": "You are a high school English test question designer."},
         {"role": "user", "content": detailed_prompt}
@@ -72,23 +84,42 @@ def generate_question(question_type, difficulty, topic):
             model="gpt-3.5-turbo",
             messages=messages
         )
-    return gpt_response['choices'][0]['message']['content']
+        response_content = gpt_response['choices'][0]['message']['content']
+        question_content, options, correct_answer = parse_question_response(response_content)
+    return question_content.strip(), options, correct_answer.strip()
 
-# 데이터 시각화 함수
+def parse_question_response(response_content):
+    # 줄바꿈으로 텍스트를 분리
+    lines = response_content.split('\n')
+    
+    # 문제 내용, 선택지, 정답 초기화
+    question_content = ""
+    options = []
+    correct_answer = ""
+
+    # 선택지 시작을 추적하는 플래그
+    options_start = False
+
+    for line in lines:
+        if line.startswith(("A)", "B)", "C)", "D)", "E)")):
+            options_start = True
+            options.append(line)
+        elif line.lower().startswith("correct answer:"):
+            correct_answer = line.split(":", 1)[1].strip()
+        elif not options_start:
+            question_content += line + "\n"
+
+    return question_content.strip(), options, correct_answer
+
+
 def visualize_question_data(data):
-    # 문제 유형을 중복 없이 리스트로 변환
+    # 문제 유형별로 카운트 계산 및 시각화
     question_types = list(set(data['types']))
-
-    # 각 유형별로 카운트를 계산
     type_counts = [data['types'].count(t) for t in question_types]
 
-    # 데이터 시각화
     fig, ax = plt.subplots()
     ax.bar(question_types, type_counts)
     ax.set_title("Question Type Distribution")
     ax.set_xlabel("Question Type")
     ax.set_ylabel("Count")
     st.pyplot(fig)
-
-
-    
