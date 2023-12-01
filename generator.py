@@ -3,6 +3,7 @@
 import streamlit as st
 import openai
 import matplotlib.pyplot as plt
+import re
 
 def question():
     # OpenAI API 키 설정
@@ -71,8 +72,11 @@ def question():
 
 def generate_question(question_type, difficulty, topic):
     # 객관식 문제 생성 프롬프트
-    detailed_prompt = f"Please create a {difficulty} level, {question_type} question about {topic} with multiple-choice options (A), B), C), D), E)) and the correct answer. Ensure that the answer choices are in uppercase and follow the 5-option multiple-choice format for selection."
-
+    detailed_prompt = (
+        f"Please create a {difficulty} level, {question_type} question about {topic} with "
+        "multiple-choice options (A), B), C), D), E)) and the correct answer. "
+        "Ensure that the answer choices follow the 5-option multiple-choice format for selection."
+    )
 
     messages = [
         {"role": "system", "content": "You are a high school English test question designer."},
@@ -100,8 +104,14 @@ def parse_question_response(response_content):
     # 선택지 시작을 추적하는 플래그
     options_start = False
 
+    # 가능한 패턴들을 정의
+    answer_pattern = re.compile(r"^[A-E]\)")
+    answer_pattern_alt = re.compile(r"^[a-e]\)")
+    answer_pattern_brackets = re.compile(r"^\([A-E]\)")
+    answer_pattern_brackets_alt = re.compile(r"^\([a-e]\)")
+
     for line in lines:
-        if line.startswith(("A)", "B)", "C)", "D)", "E)")):
+        if answer_pattern.match(line) or answer_pattern_alt.match(line) or answer_pattern_brackets.match(line) or answer_pattern_brackets_alt.match(line):
             options_start = True
             options.append(line)
         elif line.lower().startswith("correct answer:"):
