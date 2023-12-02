@@ -9,9 +9,6 @@ def question():
     # OpenAI API 키 설정
     openai.api_key = st.secrets["api_key"]
 
-    # 웹 페이지 제목 설정
-    st.title("📘 SAT English Question Generator")
-
     # 서비스 소개 및 환영 인사
     st.subheader("Welcome!")
     st.write("Welcome to the SAT English question generator.")
