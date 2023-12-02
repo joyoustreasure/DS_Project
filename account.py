@@ -31,7 +31,6 @@ def update_profile_page():
     else: 
         username = st.session_state.username
     user_info = get_user_info(username)
-    ranked_before = user_info["ranked_preferences"]
 
     # User Survey
     with st.form("register_form"):
