@@ -40,7 +40,7 @@ def login_form():
             if check_login(username, password):
                 st.success("Successfully logged in.")
                 st.session_state['logged_in'] = True  # 로그인 상태를 세션 상태에 저장
-                st.experimental_rerun()  # 스크립트를 재실행합니다.
+                st.rerun()  # 스크립트를 재실행합니다.
             else:
                 st.error("Incorrect username or password.")
 

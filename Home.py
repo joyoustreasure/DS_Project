@@ -6,6 +6,7 @@ from generator import question
 from FAQ import create_faq_section
 from print import print_exam
 import feedback  # 피드백 모듈 임포트
+from account import update_profile_page
 from mongodb_utils import connect_to_mongodb
 
 users_collection = connect_to_mongodb("users")
@@ -56,7 +57,7 @@ def login_form():
             if check_login(username, password):
                 st.success("Successfully logged in.")
                 st.session_state['logged_in'] = True 
-                st.experimental_rerun() 
+                st.rerun() 
             else:
                 st.error("Incorrect username or password.")
 
@@ -120,7 +121,7 @@ else:
     st.sidebar.title("Menu")
     app_choice = st.sidebar.radio(
         "Choose the App", 
-        ["Home 🏡", "Create Questions 📝", "Print Exam 🖨️", "Frequently Asked Questions ❓", "Question Type Examples 📚", "User Feedback 🗣️"]
+        ["Home 🏡", "Create Questions 📝", "Print Exam 🖨️", "Frequently Asked Questions ❓", "Question Type Examples 📚", "User Feedback 🗣️", "Account 🔑"]
     )
 
     # 홈 화면 내용을 표시합니다.
@@ -191,3 +192,5 @@ else:
         feedback.show_feedback_form()
         #feedback.display_feedback_board()
         feedback.display_feedback_board()
+    elif app_choice == "Account 🔑":
+        update_profile_page()
