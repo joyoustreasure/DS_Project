@@ -79,21 +79,22 @@ def register_form():
         word_skill = st.slider("Word Skill", 0, 100, 30)
         reading_comprehension = st.slider("Reading Comprehension", 0, 100, 40)
         listening_skill = st.slider("Listening Skill", 0, 100, 30)
-
         total_score = word_skill + reading_comprehension + listening_skill
-        if total_score > 100:
-            st.error("Total score cannot exceed 100 points. Please adjust it.")
-            submit_button = st.form_submit_button("Sign Up", disabled=True)
-        else:
-            submit_button = st.form_submit_button("Sign Up")
+
+        submit_button = st.form_submit_button("Sign Up")
 
         if submit_button:
+            existing_user = users_collection.find_one({"username": new_username})
             if not new_username or not new_password or not confirm_password:
                 st.error("Please fill out all fields.")
+            elif existing_user:
+                st.error("This username is already taken. Please choose a different one.")
             elif new_password != confirm_password:
                 st.error("Passwords do not match.")
-            elif not question_preference:
+            elif len(question_preference) != 4:
                 st.error("Please select your preferences before signing up.")
+            elif total_score != 100:
+                st.error("Total score must be 100 points. Please adjust it.")
             else:
                 # Save user information and self-assessment scores to the database // question_preference data 저장 필요
                 ranked_preferences = {}
@@ -102,10 +103,10 @@ def register_form():
                 ranked_preferences_list = [pref for pref, _ in sorted(ranked_preferences.items(), key=lambda x: x[1])]
                 register_user(new_username, new_password, word_skill, reading_comprehension, listening_skill, ranked_preferences_list)
                 st.success("Your account has been successfully created. You can now log in.")
-                st.write("Your ranked preferences:")
+                container = st.container(border=True)
+                container.write("#### Your ranked preferences")
                 for pref, rank in ranked_preferences.items():
-                    st.write(f"rank {rank}: {pref}")
-
+                    container.write(f"{'&nbsp;' * 3}Rank {rank}: {pref}")
 
 # 로그인 상태가 아니면 로그인 폼을 보여줌
 if not st.session_state['logged_in']:
