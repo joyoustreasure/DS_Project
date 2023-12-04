@@ -4,69 +4,6 @@ import streamlit as st
 import openai
 import matplotlib.pyplot as plt
 import re
-
-def question():
-    # OpenAI API 키 설정
-    openai.api_key = st.secrets["api_key"]
-
-    # 서비스 소개 및 환영 인사
-    st.subheader("Welcome!")
-    st.write("Welcome to the SAT English question generator.")
-    st.write("You can improve your English skills by generating various types of questions.")
-
-    # 개인정보 보호 안내
-    st.subheader("Privacy Protection")
-    st.write("All data generated here is securely processed to protect your personal information.")
-
-    # 문제 유형 선택 버튼 생성
-    st.subheader("Choose Question Type")
-
-    # 문제 생성 요구사항 입력
-    with st.expander("Define Question Requirements", expanded=False):
-        question_type = st.selectbox("Question Type", ["Blank_Single", "Blank_Multiple", "Sequence", "Main_Idea"])
-        difficulty = st.select_slider("Voca Difficulty", options=['Level 1', 'Level 2', 'Level 3', 'Level 4', 'Level 5'])
-        topic = st.text_input("Topic")
-        submit_button = st.button("Submit Requirements")
-
-        # 문제 생성 로직
-        if submit_button:
-            generated_question, options, correct_answer = generate_question(question_type, difficulty, topic)
-            st.session_state['generated_question'] = generated_question
-            st.session_state['correct_answer'] = correct_answer
-            st.session_state['options'] = options
-
-        # 데이터 수집 및 저장
-        if 'question_data' not in st.session_state:
-            st.session_state['question_data'] = {'types': [], 'difficulties': [], 'topics': []}
-        st.session_state['question_data']['types'].append(question_type)
-        st.session_state['question_data']['difficulties'].append(difficulty)
-        st.session_state['question_data']['topics'].append(topic if topic else "General")
-
-    # 시각화 기능 추가
-    if st.button("Show Question Stats"):
-        if 'question_data' in st.session_state:
-            visualize_question_data(st.session_state['question_data'])
-
-    # 생성된 문제 및 객관식 답안 선택 표시
-    if 'generated_question' in st.session_state and 'options' in st.session_state:
-        st.text_area("Generated Question", st.session_state['generated_question'], height=300)
-        selected_option = st.radio("Choose an answer", st.session_state['options'])
-        submit_answer = st.button("Submit Answer")
-
-        # 답안 제출 및 평가
-        if submit_answer:
-            if selected_option == st.session_state['correct_answer']:
-                st.success("Correct!")
-            else:
-                st.error("Incorrect! The correct answer was: " + st.session_state['correct_answer'])
-
-        # 문제 저장
-        if st.button('Save Question'):
-            if 'questions' not in st.session_state:
-                st.session_state['questions'] = []
-            st.session_state['questions'].append(st.session_state['generated_question'])
-            del st.session_state['generated_question']
-
 def generate_question(question_type, difficulty, topic):
     # 객관식 문제 생성 프롬프트
     detailed_prompt = (
@@ -88,6 +25,66 @@ def generate_question(question_type, difficulty, topic):
         response_content = gpt_response['choices'][0]['message']['content']
         question_content, options, correct_answer = parse_question_response(response_content)
     return question_content.strip(), options, correct_answer.strip()
+
+def question():
+
+    # 컬럼 설정: 왼쪽 컬럼을 더 크게 설정합니다.
+    left_column, right_column = st.columns([2, 1])
+    
+    with left_column:
+        st.subheader("Welcome to the SAT English Question Generator")
+        st.write("Improve your English skills by generating various types of questions.")
+        st.write("All data generated here is securely processed to protect your personal information.")
+
+        # 문제 유형, 난이도, 주제를 선택하는 UI
+        question_type = st.selectbox("Question Type", ["Single-Word Fill-in-the-Blank", "Phrase Fill-in-the-Blank", "Sequence Inference", "Main Idea Inference"])
+        difficulty = st.slider("Vocabulary Difficulty", 1, 5, 2)
+        topic = st.text_input("Topic", value="Soccer")
+        submit_button = st.button("Generate Question")
+
+        if submit_button:
+            generated_question, options, correct_answer = generate_question(question_type, difficulty, topic)
+            st.session_state.generated_question = generated_question
+            st.session_state.options = options
+            st.session_state.correct_answer = correct_answer
+
+        # 문제 생성 결과를 표시하는 UI
+        if 'generated_question' in st.session_state:
+            st.subheader("Generated Question")
+            st.write(st.session_state.generated_question)
+            option = st.radio("Options", st.session_state.options)
+            submit_answer = st.button("Submit Answer")
+
+            if submit_answer:
+                if option == st.session_state.correct_answer:
+                    st.success("Correct!")
+                else:
+                    st.error(f"Incorrect! The correct answer was: {st.session_state.correct_answer}")
+
+    with right_column:
+        st.subheader("Saved Questions")
+        if 'questions' not in st.session_state:
+            st.session_state.questions = []
+
+        # 'Save Question' 버튼을 통해 문제를 저장하는 UI
+        if st.button('Save Question') and 'generated_question' in st.session_state:
+            st.session_state.questions.append(st.session_state.generated_question)
+            st.success("Question saved!")
+
+        # 저장된 문제를 표시하고 관리하는 UI
+        for idx, question in enumerate(st.session_state.questions):
+            st.text(question)
+            col1, col2 = st.columns(2)
+            if col1.button('Review', key=f'review{idx}'):
+                st.session_state.current_review = question
+            if col2.button('Delete', key=f'delete{idx}'):
+                st.session_state.questions.pop(idx)
+                st.experimental_rerun()
+        
+        # 선택된 문제를 검토하는 UI
+        if 'current_review' in st.session_state:
+            st.write(st.session_state.current_review)
+
 
 def parse_question_response(response_content):
     # 줄바꿈으로 텍스트를 분리

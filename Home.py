@@ -14,8 +14,64 @@ users_collection = connect_to_mongodb("users")
 # 페이지 설정
 st.set_page_config(
     page_title="Exam Creation Lab",
-    page_icon="📚"
+    page_icon="📚",
+    layout='wide'
 )
+
+# Insert this at the beginning of your script (after the imports)
+st.markdown("""
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
+
+/* Add CSS rules to specify classes you want to apply the custom font to. */
+body {
+    font-family: 'Montserrat', sans-serif;
+    background-color: #f8f8f8;
+    color: #333;
+}
+
+/* Additional styles for a more stylish and sophisticated look */
+h1 {
+    color: #007acc;
+    font-weight: bold;
+    font-size: 48px;
+}
+
+h2 {
+    color: #007acc;
+    font-weight: bold;
+    font-size: 36px;
+}
+
+.stTextInput, .stSelectbox, .stTextArea {
+    border: 2px solid #007acc;
+    border-radius: 10px;
+    padding: 12px;
+    font-size: 18px;
+    background-color: #ffffff;
+    color: #333;
+}
+
+.stButton > button {
+    border: none;
+    background-color: #007acc;
+    color: white;
+    font-weight: bold;
+    border-radius: 25px;
+    padding: 14px 28px;
+    font-size: 20px;
+}
+
+.st-bb {
+    border-bottom: 2px solid #007acc !important;
+}
+
+.st-at {
+    color: #007acc;
+    font-weight: bold;
+}
+</style>
+""", unsafe_allow_html=True)
 
 # 세션 상태 초기화
 if 'username' not in st.session_state:
@@ -34,15 +90,15 @@ def check_login(username, password):
         return True
     return False
 
-def register_user(username, password, word_skill, reading_comprehension, listening_skill, ranked_preferences, difficulty_level):
+def register_user(username, password, Vocabulary, Sentence_Length, Sentence_Complexity, ranked_preferences, difficulty_level):
     hashed_password = sha256(password.encode()).hexdigest()
     # 사용자 정보, 자가 평가 점수 및 순위별 선호도를 데이터베이스에 저장 // Mongo DB에서 아래 Data를 저장
     users_collection.insert_one({
         "username": username,
         "password": hashed_password,
-        "Vocabulary": word_skill,
-        "Sentence Length": reading_comprehension,
-        "Sentence Complexity": listening_skill,
+        "Vocabulary": Vocabulary,
+        "Sentence Length": Sentence_Length,
+        "Sentence Complexity": Sentence_Complexity,
         "ranked_preferences": ranked_preferences,
         "difficulty_level": difficulty_level
     })
