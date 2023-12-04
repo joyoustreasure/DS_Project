@@ -1,3 +1,5 @@
+# FAQ.py
+
 import streamlit as st
 from mongodb_utils import connect_to_mongodb
 

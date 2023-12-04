@@ -75,7 +75,11 @@ def register_form():
             ["Blank_Single", "Blank_Multiple", "Sequence", "Main_Idea"]
         )
 
-        # Add user survey
+        # Create a container to display the ranked preferences
+        # This will initially be empty and will be populated upon form submission
+        ranked_preferences_container = st.container()
+
+        # Self-assessment of English Proficiency
         st.write("### Self-assessment of English Proficiency")
         word_skill = st.slider("Word Skill", 0, 100, 30)
         reading_comprehension = st.slider("Reading Comprehension", 0, 100, 40)
@@ -94,20 +98,27 @@ def register_form():
                 st.error("Passwords do not match.")
             elif len(question_preference) != 4:
                 st.error("Please select your preferences before signing up.")
-            elif total_score != 100:
-                st.error("Total score must be 100 points. Please adjust it.")
             else:
-                # Save user information and self-assessment scores to the database // question_preference data 저장 필요
+                # Rank the preferences based on user selection
                 ranked_preferences = {}
                 for i, pref in enumerate(question_preference):
                     ranked_preferences[pref] = i + 1
-                ranked_preferences_list = [pref for pref, _ in sorted(ranked_preferences.items(), key=lambda x: x[1])]
-                register_user(new_username, new_password, word_skill, reading_comprehension, listening_skill, ranked_preferences_list)
-                st.success("Your account has been successfully created. You can now log in.")
-                container = st.container(border=True)
-                container.write("#### Your ranked preferences")
-                for pref, rank in ranked_preferences.items():
-                    container.write(f"{'&nbsp;' * 3}Rank {rank}: {pref}")
+                ranked_preferences_list = [pref for pref, _ in sorted(ranked_preferences.items(), key=lambda item: item[1])]
+
+                # Check if total score is 100
+                if total_score == 100:
+                    # Save user information and self-assessment scores to the database
+                    register_user(new_username, new_password, word_skill, reading_comprehension, listening_skill, ranked_preferences_list)
+                    st.success("Your account has been successfully created. You can now log in.")
+                    
+                    # Display the ranked preferences
+                    with ranked_preferences_container:
+                        st.write("#### Your ranked preferences")
+                        for pref, rank in sorted(ranked_preferences.items(), key=lambda item: item[1]):
+                            st.write(f"Rank {rank}: {pref}")
+                else:
+                    st.error("Total score must be 100 points. Please adjust it.")
+
 
 # 로그인 상태가 아니면 로그인 폼을 보여줌
 if not st.session_state['logged_in']:
@@ -157,12 +168,11 @@ else:
         st.title("❓ Frequently Asked Questions")
         st.write("Find answers to common questions.")
         create_faq_section()
-    # 희진아 여기에 example을 추가해라
-    # 희진아 일요일 18시까지 해라.
+
     elif app_choice == "Question Type Examples 📚":
         st.title("📚 Question Type Examples")
         st.write("Explore different types of questions you can create.")
-        container1 = st.container(border=True)
+        container1 = st.container()
         container1.write("#### Sequence")
         container1.write("According to the market response model, it is increasing prices that drive providers to search for new sources, innovators to substitute, consumers to conserve, and alternatives to emerge. ")
         container1.write("(A) Many examples of such “green taxes” exist. Facing landfill costs, labor expenses, and related costs in the provision of garbage disposal, for example, some cities have required households to dispose of all waste in special trash bags, purchased by consumers themselves, and often costing a dollar or more each.")
@@ -174,7 +184,7 @@ else:
         st.write("④ (C) - (A) - (B)")
         st.write("⑤ (C) - (B) - (A)")
 
-        container2 = st.container(border=True)
+        container2 = st.container()
         container2.write("### Blank_Sentence")
         container2.write("Precision and determinacy are a necessary requirement for all meaningful scientific debate, and progress in the sciences is, to a large extent, the ongoing process of achieving ever greater precision. But historical representation puts a premium on a proliferation of representations, hence not on the refinement of one representation but on the production of an ever more varied set of representations. Historical insight is not a matter of a continuous “narrowing down” of previous options, not of an approximation of the truth, but, on the contrary, is an “explosion” of possible points of view. It therefore aims at the unmasking of previous illusions of determinacy and precision by the production of new and alternative representations, rather than at achieving truth by a careful analysis of what was right and wrong in those previous representations. And from this perspective, the development of historical insight may indeed be regarded by the outsider as a process of creating ever more confusion, a continuous questioning of [BLANK], rather than, as in the sciences, an ever greater approximation to the truth.")
         st.write("① criteria for evaluating historical representations")
@@ -183,7 +193,7 @@ else:
         st.write("④ coexistence of multiple viewpoints in historical writing")
         st.write("⑤ correctness and reliability of historical evidence collected")
 
-        container3 = st.container(border=True)
+        container3 = st.container()
         container3.write("### Blank_Word")         
         container3.write("Humour involves not just practical disengagement but cognitive disengagement. As long as something is funny, we are for the moment not concerned with whether it is real or fictional, true or false. This is why we give considerable leeway to people telling funny stories. If they are getting extra laughs by exaggerating the silliness of a situation or even by making up a few details, we are happy to grant them comic licence, a kind of poetic licence. Indeed, someone listening to a funny story who tries to correct the teller ― ‘No, he didn’t spill the spaghetti on the keyboard and the monitor, just on the keyboard’ ― will probably be told by the other listeners to stop interrupting. The creator of humour is putting ideas into people’s heads for the pleasure those ideas will bring, not to provide [BLANK] information.")
         st.write("① accurate")
@@ -192,7 +202,7 @@ else:
         st.write("④ additional")
         st.write("⑤ alternative")
 
-        container4 = st.container(border=True)
+        container4 = st.container()
         container4.write("### Flow")       
         container4.write("Since their introduction, information systems have substantially changed the way business is conducted. ① This is particularly true for business in the shape and form of cooperation between firms that involves an integration of value chains across multiple units. ② The resulting networks do not only cover the business units of a single firm but typically also include multiple units from different firms. ③ As a consequence, firms do not only need to consider their internal organization in order to ensure sustainable business performance; they also need to take into account the entire ecosystem of units surrounding them. ④ Many major companies are fundamentally changing their business models by focusing on profitable units and cutting off less profitable ones. ⑤ In order to allow these different units to cooperate successfully, the existence of a common platform is crucial.")
     # 사용자 피드백 메뉴 옵션 처리
