@@ -34,16 +34,17 @@ def check_login(username, password):
         return True
     return False
 
-def register_user(username, password, word_skill, reading_comprehension, listening_skill, ranked_preferences):
+def register_user(username, password, word_skill, reading_comprehension, listening_skill, ranked_preferences, difficulty_level):
     hashed_password = sha256(password.encode()).hexdigest()
     # 사용자 정보, 자가 평가 점수 및 순위별 선호도를 데이터베이스에 저장 // Mongo DB에서 아래 Data를 저장
     users_collection.insert_one({
         "username": username,
         "password": hashed_password,
-        "word_skill": word_skill,
-        "reading_comprehension": reading_comprehension,
-        "listening_skill": listening_skill,
-        "ranked_preferences": ranked_preferences
+        "Vocabulary": word_skill,
+        "Sentence Length": reading_comprehension,
+        "Sentence Complexity": listening_skill,
+        "ranked_preferences": ranked_preferences,
+        "difficulty_level": difficulty_level
     })
 
 
@@ -69,10 +70,10 @@ def register_form():
         confirm_password = st.text_input("Confirm Password", type="password")
 
         # User Survey
-        st.write("## User Survey")
+        st.write("### 1. User Survey")
         question_preference = st.multiselect(
-            "Please rank your preferences for types of English exam questions:",
-            ["Blank_Single", "Blank_Multiple", "Sequence", "Main_Idea"]
+            "Selection of Preferred Question Types: Please list the following question types in order of your interest, starting with the most preferred.",
+            ["Fill-in-the-Blank-with-Single-Word", "Fill-in-the-Blank-with-Phrase", "Sequence-Inference", "Main-Idea-Inference"]
         )
 
         # Create a container to display the ranked preferences
@@ -80,11 +81,19 @@ def register_form():
         ranked_preferences_container = st.container()
 
         # Self-assessment of English Proficiency
-        st.write("### Self-assessment of English Proficiency")
-        word_skill = st.slider("Word Skill", 0, 100, 30)
-        reading_comprehension = st.slider("Reading Comprehension", 0, 100, 40)
-        listening_skill = st.slider("Listening Skill", 0, 100, 30)
+        st.write("### 2. Evaluation of Desired Problem-Solving Skills Improvement")
+        st.write("Please indicate the extent to which you want to improve in the following areas using percentages. Ensure the total adds up to 100%.")
+        word_skill = st.slider("Vocabulary", 0, 100, 30)
+        reading_comprehension = st.slider("Sentence Length", 0, 100, 40)
+        listening_skill = st.slider("Sentence Complexity", 0, 100, 30)
         total_score = word_skill + reading_comprehension + listening_skill
+
+        # Choose the difficulty level of starting problem solving
+        st.write("### 3. Choose the difficulty level of starting problem solving")
+        difficulty_level = st.selectbox(
+            "Select your preferred difficulty level:",
+            ("Level 1", "Level 2", "Level 3", "Level 4", "Level 5")
+        )
 
         submit_button = st.form_submit_button("Sign Up")
 
@@ -108,7 +117,7 @@ def register_form():
                 # Check if total score is 100
                 if total_score == 100:
                     # Save user information and self-assessment scores to the database
-                    register_user(new_username, new_password, word_skill, reading_comprehension, listening_skill, ranked_preferences_list)
+                    register_user(new_username, new_password, word_skill, reading_comprehension, listening_skill, ranked_preferences_list, difficulty_level)
                     st.success("Your account has been successfully created. You can now log in.")
                     
                     # Display the ranked preferences
