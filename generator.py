@@ -79,11 +79,10 @@ if 'questions' not in st.session_state:
 if 'current_index' not in st.session_state:
     st.session_state.current_index = 0
 if 'user_answers' not in st.session_state:
-    st.session_state.user_answers = []
+    st.session_state.user_answers = []  # This should be a list, as you are accessing it by index
 
 # 메인 함수: 문제 생성 및 네비게이션 관리
 def question():
-    # 사용자가 토픽 그룹을 선택할 수 있는 selectbox 생성
     group_index = st.selectbox("Choose a topic group to generate questions:", range(len(topic_groups)), format_func=lambda x: ", ".join(topic_groups[x]))
     selected_group = topic_groups[group_index]
     topic_input = st.selectbox("Now select a specific topic:", selected_group)
@@ -91,20 +90,38 @@ def question():
 
     with left_column:
         if st.button("generate question"):
-            if topic_input and len(st.session_state.questions) < 10:  # 10문제 제한 추가
+            if topic_input and len(st.session_state.questions) < 10:  # 10문제 제한
                 new_question = generate_question(topic_input)
                 st.session_state.questions.append(new_question)
-                st.session_state.user_answers.append('')  # 사용자 답변 공간 확보
+                st.session_state.user_answers.append('')  # Append an empty string for each new question
                 st.session_state.current_index = len(st.session_state.questions) - 1
 
+  
         if 'current_index' in st.session_state and st.session_state.current_index < len(st.session_state.questions):
             current_question = st.session_state.questions[st.session_state.current_index]
-            st.write(f"Topic: {st.session_state.current_index + 1}")  # 인덱스로 토픽 번호 표시
+            st.write(f"Topic: {st.session_state.current_index + 1}")
             st.write(current_question['question'])
-            answer = st.radio("Choose your answer:", current_question['options'], key=f"answer{st.session_state.current_index}")
-            st.session_state.user_answers[st.session_state.current_index] = answer
+            options = current_question['options']
+            
+            # Directly access the user_answers list by index with proper bounds checking
+            if st.session_state.current_index < len(st.session_state.user_answers):
+                current_answer = st.session_state.user_answers[st.session_state.current_index]
+            else:
+                current_answer = ''
+                
+            # Find the index of the current answer in the options list
+            answer_index = options.index(current_answer) if current_answer in options else 0
+            answer = st.radio(
+                "Choose your answer:", 
+                options, 
+                index=answer_index, 
+                key=f"answer{st.session_state.current_index}"
+            )
+            # Save the selected answer to the user_answers list
+            if st.session_state.current_index < len(st.session_state.user_answers):
+                st.session_state.user_answers[st.session_state.current_index] = answer
 
-        if len(st.session_state.questions) == 10 and all(st.session_state.user_answers):  # 10문제가 모두 생성되고 답변이 모두 있는 경우
+        if len(st.session_state.questions) == 10 and all(st.session_state.user_answers.values()):
             if st.button("Submit Answers"):
                 calculate_score()
 
