@@ -161,10 +161,10 @@ def register_form():
         # Self-assessment of English Proficiency
         st.write("### 2. Evaluation of Desired Problem-Solving Skills Improvement")
         st.write("Please indicate the extent to which you want to improve in the following areas using percentages. Ensure the total adds up to 100%.")
-        word_skill = st.slider("Vocabulary", 0, 100, 30)
-        reading_comprehension = st.slider("Sentence Length", 0, 100, 40)
-        listening_skill = st.slider("Sentence Complexity", 0, 100, 30)
-        total_score = word_skill + reading_comprehension + listening_skill
+        Vocabulary = st.slider("Vocabulary", 0, 100, 30)
+        Sentence_Length = st.slider("Sentence Length", 0, 100, 40)
+        Sentence_Complexity = st.slider("Sentence Complexity", 0, 100, 30)
+        total_score = Vocabulary + Sentence_Length + Sentence_Complexity
 
         # Choose the difficulty level of starting problem solving
         st.write("### 3. Choose the difficulty level of starting problem solving")
@@ -195,7 +195,7 @@ def register_form():
                 # Check if total score is 100
                 if total_score == 100:
                     # Save user information and self-assessment scores to the database
-                    register_user(new_username, new_password, word_skill, reading_comprehension, listening_skill, ranked_preferences_list, difficulty_level)
+                    register_user(new_username, new_password, Vocabulary, Sentence_Length, Sentence_Complexity, ranked_preferences_list, difficulty_level)
                     st.success("Your account has been successfully created. You can now log in.")
                     
                     # Display the ranked preferences

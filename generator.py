@@ -66,7 +66,6 @@ if 'user_answers' not in st.session_state:
 
 # 메인 함수: 문제 생성 및 네비게이션 관리
 def question():
-    st.title("SAT English Question Generator")
     topic_input = st.text_input("Enter a topic to generate questions:", "")
     left_column, right_column = st.columns([2, 1])
 
