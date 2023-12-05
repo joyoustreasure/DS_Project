@@ -7,6 +7,23 @@ import re
 
 openai.api_key = st.secrets["api_key"]
 
+# 토픽 그룹 목록 정의
+topic_groups = [
+    ['Computer', 'Internet', 'Information', 'Media', 'Transportation'],
+    ['Education', 'School', 'Career'],
+    ['Environment', 'Resources', 'Recycling'],
+    ['Guide', 'Mail', 'Letter'],
+    ['Language', 'Literature', 'Culture'],
+    ['Medicine', 'Health', 'Nutrition', 'Food'],
+    ['Music', 'Art', 'Movies', 'Dance', 'Photography', 'Architecture'],
+    ['Person', 'Anecdote', 'Fable'],
+    ['Philosophy', 'Religion', 'History', 'Custom', 'Geography'],
+    ['Physics', 'Chemistry', 'Life Science', 'Earth Science'],
+    ['Politics', 'Economics', 'Society', 'Law'],
+    ['Psychology', 'Interpersonal Relationships'],
+    ['Sports', 'Leisure', 'Hobbies', 'Travel']
+]
+
 # 문제 생성 함수
 def generate_question(topic):
     detailed_prompt = (
@@ -66,7 +83,10 @@ if 'user_answers' not in st.session_state:
 
 # 메인 함수: 문제 생성 및 네비게이션 관리
 def question():
-    topic_input = st.text_input("Enter a topic to generate questions:", "")
+    # 사용자가 토픽 그룹을 선택할 수 있는 selectbox 생성
+    group_index = st.selectbox("Choose a topic group to generate questions:", range(len(topic_groups)), format_func=lambda x: ", ".join(topic_groups[x]))
+    selected_group = topic_groups[group_index]
+    topic_input = st.selectbox("Now select a specific topic:", selected_group)
     left_column, right_column = st.columns([2, 1])
 
     with left_column:
