@@ -5,7 +5,7 @@ from hashlib import sha256
 from generator import question 
 from FAQ import create_faq_section
 from print import print_exam
-import feedback  # 피드백 모듈 임포트
+import feedback
 from account import update_profile_page
 from mongodb_utils import connect_to_mongodb
 
@@ -23,55 +23,77 @@ st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
 
-/* Add CSS rules to specify classes you want to apply the custom font to. */
+/* General styles */
 body {
     font-family: 'Montserrat', sans-serif;
-    background-color: #f8f8f8;
-    color: #333;
+    background-color: #f4f4f4;
+    color: #424242;
 }
 
-/* Additional styles for a more stylish and sophisticated look */
+/* Styling for headers */
+h1, h2, h3, h4, h5, h6 {
+    color: #005792;
+    font-weight: 700;
+}
+
 h1 {
-    color: #007acc;
-    font-weight: bold;
-    font-size: 48px;
+    font-size: 2.5em; /* 40px */
 }
 
 h2 {
-    color: #007acc;
-    font-weight: bold;
-    font-size: 36px;
+    font-size: 2em; /* 32px */
 }
 
+h3 {
+    font-size: 1.75em; /* 28px */
+}
+
+/* Input widgets styling */
 .stTextInput, .stSelectbox, .stTextArea {
-    border: 2px solid #007acc;
-    border-radius: 10px;
-    padding: 12px;
-    font-size: 18px;
+    border: 2px solid #005792;
+    border-radius: 8px;
+    padding: 10px;
+    font-size: 16px;
     background-color: #ffffff;
-    color: #333;
+    color: #333333;
 }
 
+/* Button styling */
 .stButton > button {
-    border: none;
-    background-color: #007acc;
-    color: white;
+    border: 2px solid #005792;
+    background-color: #005792;
+    color: #ffffff;
     font-weight: bold;
-    border-radius: 25px;
-    padding: 14px 28px;
-    font-size: 20px;
+    border-radius: 20px;
+    padding: 10px 20px;
+    font-size: 18px;
+    transition: background-color 0.3s, color 0.3s;
 }
 
+.stButton > button:hover {
+    background-color: #007acc;
+    color: #f0f0f0;
+}
+
+/* Additional styling for layout and other elements */
 .st-bb {
-    border-bottom: 2px solid #007acc !important;
+    border-bottom: 2px solid #005792 !important;
 }
 
 .st-at {
-    color: #007acc;
+    color: #005792;
     font-weight: bold;
+}
+
+/* Responsive design adjustments */
+@media screen and (max-width: 768px) {
+    h1 {
+        font-size: 2em; /* Adjusted for smaller screens */
+    }
 }
 </style>
 """, unsafe_allow_html=True)
+
 
 # 세션 상태 초기화
 if 'username' not in st.session_state:
