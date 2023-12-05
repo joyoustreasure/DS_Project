@@ -224,7 +224,7 @@ else:
 
     # 홈 화면 내용을 표시합니다.
     if app_choice == "Home 🏡":
-        st.image("2.jpg")
+        
         st.title("👩‍🏫 3355's Exam Creation Lab!")
         st.markdown("Empowering English Educators")
         st.markdown("Welcome, dedicated educators! Our Exam Creation Lab is specifically designed to assist you in crafting comprehensive English exams. With our platform, you can easily generate various types of questions that cater to all aspects of language learning.")
@@ -241,7 +241,6 @@ else:
         st.write("To get the most out of your exams, we recommend using a blend of question types to challenge different cognitive skills. Encourage students to practice with timed quizzes for speed, and longer, reflective questions for deep learning. Mix and match to customize the perfect exam!")
         st.subheader("Your Partner in Education")
         st.write("We are here to support you in nurturing the next generation of English speakers. Utilize our platform to enhance your teaching strategy, engage your students, and watch their language skills flourish.")
-        
 
     # 다른 메뉴 옵션의 경우 해당 기능을 실행합니다.
     elif app_choice == "Create Questions 📝":

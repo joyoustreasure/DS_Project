@@ -72,7 +72,7 @@ if 'user_answers' not in st.session_state:
     st.session_state.user_answers = []
 if 'topics' not in st.session_state:
     st.session_state.topics = []
-    
+
 # 메인 함수: 문제 생성 및 네비게이션 관리
 def question():
     st.title("SAT English Question Generator")
@@ -90,10 +90,10 @@ def question():
                 st.session_state.current_index = len(st.session_state.questions) - 1  # 마지막 문제로 인덱스 설정
 
         # Next 버튼: 다음 문제로 이동
-        if st.button("Next"):
-            if 'current_index' in st.session_state:
-                if st.session_state.current_index + 1 < len(st.session_state.questions):
-                    st.session_state.current_index += 1
+        # if st.button("Next"):
+        #     if 'current_index' in st.session_state:
+        #         if st.session_state.current_index + 1 < len(st.session_state.questions):
+        #             st.session_state.current_index += 1
 
         # 현재 문제와 선택지 표시
         if 'current_index' in st.session_state and st.session_state.current_index < len(st.session_state.questions):
@@ -119,7 +119,8 @@ def question():
                     st.session_state.current_index -= 1
                 st.experimental_rerun()
 
-    # 답변 제출 및 점수 계산
+    # 답변 제출 및 점수 계산.
+    ## 수정필요 : 10점이 되었을 때 계산되는 것으로 수정이 필요함. 그리고 10점이 되었을 때 제출이 되면 그 때 점수 계산이 필요함.
     if 'current_index' in st.session_state and st.session_state.current_index == len(st.session_state.questions) - 1:
         if st.button("Submit Answers"):
             calculate_score()
