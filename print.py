@@ -2,10 +2,10 @@
 
 import streamlit as st
 from reportlab.lib.pagesizes import letter
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
-from reportlab.lib.styles import getSampleStyleSheet
 import io
-import ast
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Frame
+from reportlab.lib.units import inch
 
 # 문제를 출력하는 함수
 def print_exam():
@@ -27,43 +27,50 @@ def print_exam():
     else:
         st.write('No questions have been generated yet.')
 
-    # PDF 생성 함수
-    def create_pdf(questions):
-        buffer = io.BytesIO()
-        doc = SimpleDocTemplate(buffer, pagesize=letter)
-        styles = getSampleStyleSheet()
-        flowables = []
-        
-        for i, question_dict in enumerate(questions, start=1):
-            question_text = question_dict['question']
-            options = question_dict['options']
-            
-            # 문제와 선택지를 PDF에 추가
-            flowables.append(Paragraph(f'Question {i}: {question_text}', styles['Heading2']))
-            for option in options:
-                flowables.append(Paragraph(option, styles['Normal']))
-            flowables.append(Spacer(1, 12))
-        
-        doc.build(flowables)
-        buffer.seek(0)
-        return buffer
-
-
-
-    # PDF 다운로드 버튼을 추가하는 함수
-    def add_download_button(questions):
-        if questions:
-            pdf_file = create_pdf(questions)
-            st.download_button(
-                label="Download Questions as PDF",
-                data=pdf_file,
-                file_name="SAT_questions.pdf",
-                mime="application/pdf"
-            )
-            st.success("Success, PDF download!")
-
-    # 스트림릿 앱에서 문제 목록을 가져오는 코드
-    questions = st.session_state.get('questions', [])
-
-    # PDF 다운로드 버튼을 추가합니다.
     add_download_button(questions)
+
+def create_pdf(questions):
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=letter, rightMargin=72, leftMargin=72, topMargin=72, bottomMargin=72)
+    styles = getSampleStyleSheet()
+
+    # Define custom styles for questions and options
+    styles.add(ParagraphStyle(name='QuestionTitle', fontSize=12, spaceAfter=6))
+    styles.add(ParagraphStyle(name='QuestionBody', fontSize=10, leading=12))
+
+    # Initialize the list of flowables
+    flowables = []
+
+    for i, question_dict in enumerate(questions, start=1):
+        question_text = question_dict['question']
+        options = question_dict['options']
+
+        # Create a frame for the question and its options
+        frame = Frame(doc.leftMargin, doc.bottomMargin, doc.width, doc.height, showBoundary=1)
+
+        # Add question title and body to the frame
+        flowables.append(Paragraph(f'Question {i}:', styles['QuestionTitle']))
+        flowables.append(Paragraph(question_text, styles['QuestionBody']))
+        for option in options:
+            flowables.append(Paragraph(option, styles['QuestionBody']))
+        
+        # Add a spacer after each question set
+        flowables.append(Spacer(1, 0.2 * inch))
+
+    # Build the PDF using the flowables
+    doc.build(flowables)
+    buffer.seek(0)
+    return buffer
+
+
+def add_download_button(questions):
+    if questions:
+        pdf_file = create_pdf(questions)
+        st.download_button(
+            label="Download Questions as PDF",
+            data=pdf_file,
+            file_name="SAT_questions.pdf",
+            mime="application/pdf"
+        )
+        st.success("I am ready to download the PDF!")
+
