@@ -5,6 +5,7 @@ from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet
 import io
+import ast
 
 # 문제를 출력하는 함수
 def print_exam():
@@ -14,9 +15,15 @@ def print_exam():
     # 문제들이 있는지 확인하고 출력합니다.
     if questions:
         st.subheader('Generated Questions')
-        for i, question in enumerate(questions, start=1):
-            st.write(f'Question {i}:')
-            st.text_area(f'Question {i} Text', question, height=300, key=f'Question{i}')
+        for i, question_dict in enumerate(questions, start=1):
+            # 딕셔너리로부터 문제 텍스트와 선택지 추출
+            question_text = question_dict['question']
+            options = question_dict['options']
+            # 문제를 잘 보이도록 형식을 맞춰서 출력
+            st.write(f'Question {i}: {question_text}')
+            for option in options:
+                st.write(option)
+            st.write("")  # 문제 사이에 공백 추가
     else:
         st.write('No questions have been generated yet.')
 
@@ -27,14 +34,21 @@ def print_exam():
         styles = getSampleStyleSheet()
         flowables = []
         
-        for i, question in enumerate(questions, start=1):
-            flowables.append(Paragraph(f'Question {i}:', styles['Heading2']))
-            flowables.append(Paragraph(question, styles['Normal']))
+        for i, question_dict in enumerate(questions, start=1):
+            question_text = question_dict['question']
+            options = question_dict['options']
+            
+            # 문제와 선택지를 PDF에 추가
+            flowables.append(Paragraph(f'Question {i}: {question_text}', styles['Heading2']))
+            for option in options:
+                flowables.append(Paragraph(option, styles['Normal']))
             flowables.append(Spacer(1, 12))
         
         doc.build(flowables)
         buffer.seek(0)
         return buffer
+
+
 
     # PDF 다운로드 버튼을 추가하는 함수
     def add_download_button(questions):
