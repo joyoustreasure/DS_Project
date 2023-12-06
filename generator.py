@@ -78,29 +78,7 @@ type_dict = {
 }
 
 # 문제 생성에 사용되는 make_prompt 함수 정의
-def make_prompt(type_num, group_index):
-    # 사용자 이름 가져오기
-    username = st.session_state.get('username')
-    if not username:
-        raise ValueError("No user is currently logged in.")
-
-    # MongoDB에서 사용자 정보를 조회
-    user = users_collection.find_one({"username": username})
-    if user is None:
-        raise ValueError(f"User not found: {username}")
-    level = level_dict[user["difficulty_level"]]
-    topic_coef = coef_dict[group_index]
-    level_topic = level - topic_coef
-
-    voca = user["Vocabulary"] / 100 * level_topic / model_coef["Vocabulary"]
-    sen_len = user["Sentence Length"] / 100 * level_topic / model_coef["Sentence Length"]
-    sen_com = user["Sentence Complexity"] / 100 * level_topic / model_coef["Sentence Complexity"]
-
-    voca_tmp = voca * var_dict["Vocabulary"] + avg_dict["Vocabulary"]
-    voca_p = 'hard' if voca_tmp > 0.1228 else 'medium' if voca_tmp > 0.0752 else 'easy'
-    sen_len_p = round(sen_len * var_dict["Sentence Length"] + avg_dict["Sentence Length"])
-    sen_com_p = round(sen_com * var_dict["Sentence Complexity"] + avg_dict["Sentence Complexity"])
-
+def make_prompt(voca_p, sen_len_p, sen_com_p, group_index):
     prompt_template = {
         1: f'''Please create a Fill-in-the-Blank-with-Single-Word question. 
             The blank should encapsulate the overarching idea presented in the text.
@@ -136,7 +114,7 @@ def make_prompt(type_num, group_index):
             Also provide five options ①, ②, ③, ④, ⑤ and correct answer.'''
     }
 
-    return prompt_template[type_num]
+    return prompt_template
 
 # 토픽 그룹 목록 정의
 topic_groups = [
@@ -155,19 +133,8 @@ topic_groups = [
     ['Sports', 'Leisure', 'Hobbies', 'Travel']
 ]
 
-# 문제 생성 함수
-def generate_question(group_index, question_number):
-    username = st.session_state.get('username')
-    if not username:
-        raise ValueError("No user is currently logged in.")
-
-    user = users_collection.find_one({"username": username})
-    if user is None:
-        raise ValueError(f"User not found: {username}")
-
-    ranked_preferences = user.get("ranked_preferences", [])
-
-    # 문제 번호에 따라 선호도 유형 결정
+# 문제 번호에 따라 선호도 유형 결정 함수
+def get_pref_type(question_number, ranked_preferences):
     if question_number < 4:  # 문제 1-4
         preference_type = ranked_preferences[0]
     elif question_number < 7:  # 문제 5-7
@@ -176,13 +143,10 @@ def generate_question(group_index, question_number):
         preference_type = ranked_preferences[2]
     else:  # 문제 10
         preference_type = ranked_preferences[3]
+    return preference_type
 
-    type_num = type_dict.get(preference_type)
-    if type_num is None:
-        raise ValueError(f"Invalid question type preference: {preference_type}")
-
-    detailed_prompt = make_prompt(type_num, group_index)
-
+# 문제 생성 함수
+def generate_question(detailed_prompt, preference_type):
     # GPT에서 날리는 최종 prompt 양식 - detailed_prompt 기반으로 선택
     messages = [
         {"role": "system", "content": "You are a high school English test question designer."},
@@ -190,7 +154,7 @@ def generate_question(group_index, question_number):
     ]
     with st.spinner("Generating question..."):
         gpt_response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo", # fine tunning 모델 = "ft:gpt-3.5-turbo-1106:personal::8SR52ebu"
+            model="gpt-3.5-turbo",
             messages=messages
         )
         response_content = gpt_response['choices'][0]['message']['content']
@@ -240,15 +204,46 @@ if 'user_answers' not in st.session_state:
 
 # 메인 함수: 문제 생성 및 네비게이션 관리
 def question():
-    group_index = st.selectbox("Choose a topic group to generate questions:", range(len(topic_groups)), format_func=lambda x: ", ".join(topic_groups[x]))
+    
+    # 사용자 이름 가져오기
+    username = st.session_state.get('username')
+    if not username:
+        raise ValueError("No user is currently logged in.")
 
+    # MongoDB에서 사용자 정보를 조회
+    user = users_collection.find_one({"username": username})
+    if user is None:
+        raise ValueError(f"User not found: {username}")
+    
+    ranked_preferences = user.get("ranked_preferences", [])
+    
+    group_index = st.selectbox("Choose a topic group to generate questions:", range(len(topic_groups)), format_func=lambda x: ", ".join(topic_groups[x]))
+    
+    level = level_dict[user["difficulty_level"]]
+    topic_coef = coef_dict[group_index]
+    level_topic = level - topic_coef
+
+    voca = user["Vocabulary"] / 100 * level_topic / model_coef["Vocabulary"]
+    sen_len = user["Sentence Length"] / 100 * level_topic / model_coef["Sentence Length"]
+    sen_com = user["Sentence Complexity"] / 100 * level_topic / model_coef["Sentence Complexity"]
+
+    voca_tmp = voca * var_dict["Vocabulary"] + avg_dict["Vocabulary"]
+    voca_p = 'hard' if voca_tmp > 0.1228 else 'medium' if voca_tmp > 0.0752 else 'easy'
+    sen_len_p = round(sen_len * var_dict["Sentence Length"] + avg_dict["Sentence Length"])
+    sen_com_p = round(sen_com * var_dict["Sentence Complexity"] + avg_dict["Sentence Complexity"])
+
+    prompt_template = make_prompt(voca_p, sen_len_p, sen_com_p, group_index)  
 
     left_column, right_column = st.columns([2, 1])
 
     with left_column:
         if st.button("Generate Question"):
             if len(st.session_state.questions) < 10:  # test를 위해 임시로 3문제
-                new_question = generate_question(group_index, len(st.session_state.questions))
+                preference_type = get_pref_type(len(st.session_state.questions), ranked_preferences)
+                type_num = type_dict.get(preference_type)
+                if type_num is None:
+                    raise ValueError(f"Invalid question type preference: {preference_type}")
+                new_question = generate_question(prompt_template[type_num], preference_type)
                 st.session_state.questions.append(new_question)
                 st.session_state.user_answers.append('')  # Append an empty string for each new question
                 st.session_state.current_index = len(st.session_state.questions) - 1
@@ -281,7 +276,11 @@ def question():
 
         if st.button("Next Question"):
             if len(st.session_state.questions) < 10:
-                new_question = generate_question(group_index, len(st.session_state.questions))
+                preference_type = get_pref_type(len(st.session_state.questions), ranked_preferences)
+                type_num = type_dict.get(preference_type)
+                if type_num is None:
+                    raise ValueError(f"Invalid question type preference: {preference_type}")
+                new_question = generate_question(prompt_template[type_num], preference_type)
                 st.session_state.questions.append(new_question)
                 st.session_state.user_answers.append('')
                 st.session_state.current_index = len(st.session_state.questions) - 1
