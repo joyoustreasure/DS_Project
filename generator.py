@@ -28,7 +28,7 @@ topic_groups = [
 def generate_question(topic):
     detailed_prompt = (
         f"Please create a question about {topic} with "
-        "multiple-choice options (A), (B), (C), (D), (E) and the correct answer. "
+        "multiple-choice options ①, ②, ③, ④, ⑤ and the correct answer. "
         "Ensure that the answer choices follow the 5-option multiple-choice format for selection."
     )
 
@@ -39,7 +39,7 @@ def generate_question(topic):
 
     with st.spinner("Generating question..."):
         gpt_response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
+            model="ft:gpt-3.5-turbo-1106:personal::8SR52ebu",
             messages=messages
         )
         response_content = gpt_response['choices'][0]['message']['content']
@@ -58,8 +58,11 @@ def parse_question_response(response_content):
     correct_answer = ""
     options_start = False
     answer_patterns = [
-        re.compile(r"^[A-E]\)"), re.compile(r"^[a-e]\)"),
-        re.compile(r"^\([A-E]\)"), re.compile(r"^\([a-e]\)")
+        re.compile(r"^\u2460"),  # ①
+        re.compile(r"^\u2461"),  # ②
+        re.compile(r"^\u2462"),  # ③
+        re.compile(r"^\u2463"),  # ④
+        re.compile(r"^\u2464")   # ⑤
     ]
 
     for line in lines:
