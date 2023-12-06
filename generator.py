@@ -123,7 +123,6 @@ def generate_question(topic):
     with st.spinner("Generating question..."):
         gpt_response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo", # fine tunning : ft:gpt-3.5-turbo-1106:personal::8SR52ebu
-            # api key : secrets.toml - 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
             messages=messages
         )
         response_content = gpt_response['choices'][0]['message']['content']
@@ -219,7 +218,7 @@ def question():
                 st.session_state.user_answers.append('')
                 st.session_state.current_index = len(st.session_state.questions) - 1
                 st.experimental_rerun()
-                
+
     with right_column:
         st.subheader("Saved Questions")
         for i, saved_question in enumerate(st.session_state.questions):
