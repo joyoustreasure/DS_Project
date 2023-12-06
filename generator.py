@@ -35,58 +35,45 @@ type_dict = {
     "Main-Idea-Inference": 4
 }
 
-def make_prompt(username, type_num, group_index):
-    user = users_collection.find_one({"username": username})
-    level = level_dict[user["difficulty_level"]]
-    topic_coef = coef_dict[group_index]
-    level_topic = level - topic_coef
-
-    # hard >1.228 medium >=0.0752 easy 
-    voca = user["Vocabulary"] / 100 * level_topic / model_coef["Vocabulary"] 
-    sen_len = user["Sentence Length"] / 100 * level_topic / model_coef["Sentence Length"]
-    sen_com = user["Sentence Complexity"] / 100 * level_topic / model_coef["Sentence Complexity"]        
-    
-    voca_tmp = voca * var_dict["Vocabulary"] + avg_dict["Vocabulary"]
-    voca_p = 'hard' if voca_tmp > 0.1228 else 'medium' if voca_tmp > 0.0752 else 'easy'
-    sen_len_p = round(sen_len * var_dict["Sentence Length"] + avg_dict["Sentence Length"])
-    sen_com_p  = round(sen_com * var_dict["Sentence Complexity"] + avg_dict["Sentence Complexity"])
-
+def make_prompt(voca_p, sen_len_p, sen_com_p, type_num, group_index):
     if type_num == 1:
-        prompt = f'Please create a Fill-in-the-Blank-with-Single-Word question. 
+        prompt = f'''Please create a Fill-in-the-Blank-with-Single-Word question. 
         The blank should encapsulate the overarching idea presented in the text.
         Voca level should be {voca_p}. 
         The topic should be among {topic_groups[group_index]}.
         There should be {sen_len_p} sentences in the text.
         And the longest sentence of the text should contain {sen_com_p} words.
-        Also provide five options, and correct answer.'
+        Also provide five options ①, ②, ③, ④, ⑤ and correct answer.'''
     
     elif type_num == 2:
-        prompt = f'Please create a Fill-in-the-Blank-with-Multiple-Word question.
+        prompt = f'''Please create a Fill-in-the-Blank-with-Multiple-Word question.
         The blank should encapsulate the overarching idea presented in the text. 
         Voca level should be {voca_p}. 
         The topic should be among {topic_groups[group_index]}. 
         There should be {sen_len_p} sentences in the text. 
         And the longest sentence of the text should contain {sen_com_p} words. 
-        Also provide five options, and correct answer.'
+        Also provide five options ①, ②, ③, ④, ⑤ and correct answer.'''
     
     elif type_num == 3:
-        prompt = f'Please create a sequence-inference question
+        prompt = f'''Please create a sequence-inference question
         Please provide the first two sentences, then divide the remaining text into three parts, with 2-3 sentences in each part. Shuffle them, and ask students to determine the logical sequence.
         Voca level should be {voca_p}. 
         The topic should be among {topic_groups[group_index]}. 
         There should be {sen_len_p} sentences in the text.
         And the longest sentence of the text should contain {sen_com_p} words. 
-        Also provide five options, and correct answer.'
+        Also provide five options ①, ②, ③, ④, ⑤ and correct answer.'''
 
     else:
-        prompt = f'Please create a Main-Idea-Inference question.
+        prompt = f'''Please create a Main-Idea-Inference question.
         The answer should encapsulate the overarching idea presented in the text.
         Voca level should be {voca_p}. 
         The topic should be among {topic_groups[group_index]}.
         There should be {sen_len_p} sentences in the text.
         And the longest sentence of the text should contain {sen_com_p} words.
         And the sentence containing blank should carry main idea.
-        Also provide five options, and correct answer.'
+        Also provide five options ①, ②, ③, ④, ⑤ and correct answer.'''
+    
+    print(prompt)
 
     return prompt
 
@@ -108,13 +95,8 @@ topic_groups = [
 ]
 
 # 문제 생성 함수
-def generate_question(topic):
-    detailed_prompt = (
-        f"Please create a question about {topic} with "
-        "multiple-choice options ①, ②, ③, ④, ⑤ and the correct answer. "
-        "Ensure that the answer choices follow the 5-option multiple-choice format for selection."
-    )
-
+def generate_question(detailed_prompt):
+    
     messages = [
         {"role": "system", "content": "You are a high school English test question designer."},
         {"role": "user", "content": detailed_prompt}
@@ -169,15 +151,39 @@ if 'user_answers' not in st.session_state:
 
 # 메인 함수: 문제 생성 및 네비게이션 관리
 def question():
+    if "username" not in st.session_state:
+        st.warning("Please log in first.")
+        return
+    else: 
+        username = st.session_state.username
+
     group_index = st.selectbox("Choose a topic group to generate questions:", range(len(topic_groups)), format_func=lambda x: ", ".join(topic_groups[x]))
-    selected_group = topic_groups[group_index]
-    topic_input = st.selectbox("Now select a specific topic:", selected_group)
+
+    user = users_collection.find_one({"username": username})
+    level = level_dict[user["difficulty_level"]]
+    topic_coef = coef_dict[group_index]
+    level_topic = level - topic_coef
+
+    # hard >1.228 medium >=0.0752 easy 
+    voca = user["Vocabulary"] / 100 * level_topic / model_coef["Vocabulary"] 
+    sen_len = user["Sentence Length"] / 100 * level_topic / model_coef["Sentence Length"]
+    sen_com = user["Sentence Complexity"] / 100 * level_topic / model_coef["Sentence Complexity"]        
+    
+    voca_tmp = voca * var_dict["Vocabulary"] + avg_dict["Vocabulary"]
+    voca_p = 'hard' if voca_tmp > 0.1228 else 'medium' if voca_tmp > 0.0752 else 'easy'
+    sen_len_p = round(sen_len * var_dict["Sentence Length"] + avg_dict["Sentence Length"])
+    sen_com_p  = round(sen_com * var_dict["Sentence Complexity"] + avg_dict["Sentence Complexity"])
+
+    
+
+    
     left_column, right_column = st.columns([2, 1])
 
     with left_column:
         if st.button("Generate Question"):
-            if topic_input and len(st.session_state.questions) < 10:  # 10문제 제한
-                new_question = generate_question(topic_input)
+            if group_index and len(st.session_state.questions) < 10:  # 10문제 제한
+                detailed_prompt = make_prompt(voca_p, sen_len_p, sen_com_p, 1, group_index)
+                new_question = generate_question(detailed_prompt)
                 st.session_state.questions.append(new_question)
                 st.session_state.user_answers.append('')  # Append an empty string for each new question
                 st.session_state.current_index = len(st.session_state.questions) - 1
