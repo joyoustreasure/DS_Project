@@ -178,10 +178,10 @@ def parse_question_response(response_content):
     option_pattern = re.compile(r"^(①|②|③|④|⑤)\s*(.*)")
 
     for line in lines:
-        # 옵션 시작을 확인합니다.
+        # 옵션 시작을 확인
         if option_pattern.match(line):
             options_start = True
-            # 옵션 번호와 텍스트를 추출합니다.
+            # 옵션 번호와 텍스트를 추출
             match = option_pattern.match(line)
             option_number = match.group(1)
             option_text = match.group(2).strip()
