@@ -219,7 +219,7 @@ else:
     st.sidebar.title("Menu")
     app_choice = st.sidebar.radio(
         "Choose the App", 
-        ["Home 🏡", "Create Questions 📝", "Print Exam 🖨️", "Frequently Asked Questions ❓", "Question Type Examples 📚", "User Feedback 🗣️", "Account 🔑"]
+        ["Home 🏡", "Create Questions 📝", "Print Exam 🖨️", "Frequently Asked Questions ❓", "Question Type Examples 📚", "User Feedback 🗣️", "Update Profile 🔑"]
     )
 
     # 홈 화면 내용을 표시합니다.
@@ -244,7 +244,7 @@ else:
 
     # 다른 메뉴 옵션의 경우 해당 기능을 실행합니다.
     elif app_choice == "Create Questions 📝":
-        st.title("📘 SAT English Question Generator")
+        st.title("📘 CSAT English Question Generator")
         question()
     elif app_choice == "Print Exam 🖨️":
         st.title("🖨️ Print Exam")
@@ -298,6 +298,6 @@ else:
         feedback.show_feedback_form()
         #feedback.display_feedback_board()
         feedback.display_feedback_board()
-    elif app_choice == "Account 🔑":
+    elif app_choice == "Update Profile 🔑":
         st.title("🔑 Update your Profile")
         update_profile_page()

@@ -111,7 +111,7 @@ topic_groups = [
 def generate_question(topic):
     detailed_prompt = (
         f"Please create a question about {topic} with "
-        "multiple-choice options (A), (B), (C), (D), (E) and the correct answer. "
+        "multiple-choice options ①, ②, ③, ④, ⑤ and the correct answer. "
         "Ensure that the answer choices follow the 5-option multiple-choice format for selection."
     )
 
@@ -122,7 +122,8 @@ def generate_question(topic):
 
     with st.spinner("Generating question..."):
         gpt_response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
+            model="gpt-3.5-turbo", # fine tunning : ft:gpt-3.5-turbo-1106:personal::8SR52ebu
+            # api key : secrets.toml - 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
             messages=messages
         )
         response_content = gpt_response['choices'][0]['message']['content']
@@ -141,8 +142,11 @@ def parse_question_response(response_content):
     correct_answer = ""
     options_start = False
     answer_patterns = [
-        re.compile(r"^[A-E]\)"), re.compile(r"^[a-e]\)"),
-        re.compile(r"^\([A-E]\)"), re.compile(r"^\([a-e]\)")
+        re.compile(r"^\u2460"),  # ①
+        re.compile(r"^\u2461"),  # ②
+        re.compile(r"^\u2462"),  # ③
+        re.compile(r"^\u2463"),  # ④
+        re.compile(r"^\u2464")   # ⑤
     ]
 
     for line in lines:
@@ -172,14 +176,14 @@ def question():
     left_column, right_column = st.columns([2, 1])
 
     with left_column:
-        if st.button("generate question"):
+        if st.button("Generate Question"):
             if topic_input and len(st.session_state.questions) < 10:  # 10문제 제한
                 new_question = generate_question(topic_input)
                 st.session_state.questions.append(new_question)
                 st.session_state.user_answers.append('')  # Append an empty string for each new question
                 st.session_state.current_index = len(st.session_state.questions) - 1
 
-  
+
         if 'current_index' in st.session_state and st.session_state.current_index < len(st.session_state.questions):
             current_question = st.session_state.questions[st.session_state.current_index]
             st.write(f"Topic: {st.session_state.current_index + 1}")
@@ -208,6 +212,14 @@ def question():
             if st.button("Submit Answers"):
                 calculate_score()
 
+        if st.button("Next Question"):
+            if len(st.session_state.questions) < 10:
+                new_question = generate_question(topic_input)
+                st.session_state.questions.append(new_question)
+                st.session_state.user_answers.append('')
+                st.session_state.current_index = len(st.session_state.questions) - 1
+                st.experimental_rerun()
+                
     with right_column:
         st.subheader("Saved Questions")
         for i, saved_question in enumerate(st.session_state.questions):
