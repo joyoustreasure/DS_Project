@@ -219,7 +219,7 @@ else:
     st.sidebar.title("Menu")
     app_choice = st.sidebar.radio(
         "Choose the App", 
-        ["Home 🏡", "Create Questions 📝", "Print Exam 🖨️", "Frequently Asked Questions ❓", "Question Type Examples 📚", "User Feedback 🗣️", "Account 🔑"]
+        ["Home 🏡", "Create Questions 📝", "Print Exam 🖨️", "Frequently Asked Questions ❓", "Question Type Examples 📚", "User Feedback 🗣️", "Update Profile 🔑"]
     )
 
     # 홈 화면 내용을 표시합니다.
