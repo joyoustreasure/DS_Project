@@ -4,8 +4,91 @@ import streamlit as st
 import openai
 import matplotlib.pyplot as plt
 import re
+from mongodb_utils import connect_to_mongodb
 
 openai.api_key = st.secrets["api_key"]
+users_collection = connect_to_mongodb("users")
+
+level_dict = {"Level 1": 0.45, "Level 2": 0.55, "Level 3": 0.65, "Level 4": 0.75, "Level 5": 0.85}
+cur_dict = {"Vocabulary": 50, "Sentence Length": 10, "Sentence Complexity": 30}
+coef_dict = {0: 1.140186372865045,
+            1: 0.4090126220153971,
+            2: 0.667917318420521,
+            3: -3.912455154502394,
+            4: 0.843169559579797,
+            5: 0.09850008527767296,
+            6: 0.5176263343330191,
+            7: 1.3226536105030031,
+            8: 1.095391025960897,
+            9: 0.749324100073369,
+            10: 1.738140724292267,
+            11: 0.14804538327885708,
+            12: 0.826669197243807}
+avg_dict = {"Vocabulary": 0.09490007996883483, "Sentence Length": 10.170168067226891, "Sentence Complexity":34.49579831932773}
+var_dict = {"Vocabulary": 0.043720581187843624, "Sentence Length": 5.238564766593916, "Sentence Complexity":9.769662128148886}
+model_coef = {"Vocabulary":  0.09099283, "Sentence Length": -0.82754087,  "Sentence Complexity": 0.03954835}
+
+type_dict = {
+    "Fill-in-the-Blank-with-Single-Word": 1,
+    "Fill-in-the-Blank-with-Phrase":  2,
+    "Sequence-Inference": 3,
+    "Main-Idea-Inference": 4
+}
+
+def make_prompt(username, type_num, group_index):
+    user = users_collection.find_one({"username": username})
+    level = level_dict[user["difficulty_level"]]
+    topic_coef = coef_dict[group_index]
+    level_topic = level - topic_coef
+
+    # hard >1.228 medium >=0.0752 easy 
+    voca = user["Vocabulary"] / 100 * level_topic / model_coef["Vocabulary"] 
+    sen_len = user["Sentence Length"] / 100 * level_topic / model_coef["Sentence Length"]
+    sen_com = user["Sentence Complexity"] / 100 * level_topic / model_coef["Sentence Complexity"]        
+    
+    voca_tmp = voca * var_dict["Vocabulary"] + avg_dict["Vocabulary"]
+    voca_p = 'hard' if voca_tmp > 0.1228 else 'medium' if voca_tmp > 0.0752 else 'easy'
+    sen_len_p = round(sen_len * var_dict["Sentence Length"] + avg_dict["Sentence Length"])
+    sen_com_p  = round(sen_com * var_dict["Sentence Complexity"] + avg_dict["Sentence Complexity"])
+
+    if type_num == 1:
+        prompt = f'Please create a Fill-in-the-Blank-with-Single-Word question. 
+        The blank should encapsulate the overarching idea presented in the text.
+        Voca level should be {voca_p}. 
+        The topic should be among {topic_groups[group_index]}.
+        There should be {sen_len_p} sentences in the text.
+        And the longest sentence of the text should contain {sen_com_p} words.
+        Also provide five options, and correct answer.'
+    
+    elif type_num == 2:
+        prompt = f'Please create a Fill-in-the-Blank-with-Multiple-Word question.
+        The blank should encapsulate the overarching idea presented in the text. 
+        Voca level should be {voca_p}. 
+        The topic should be among {topic_groups[group_index]}. 
+        There should be {sen_len_p} sentences in the text. 
+        And the longest sentence of the text should contain {sen_com_p} words. 
+        Also provide five options, and correct answer.'
+    
+    elif type_num == 3:
+        prompt = f'Please create a sequence-inference question
+        Please provide the first two sentences, then divide the remaining text into three parts, with 2-3 sentences in each part. Shuffle them, and ask students to determine the logical sequence.
+        Voca level should be {voca_p}. 
+        The topic should be among {topic_groups[group_index]}. 
+        There should be {sen_len_p} sentences in the text.
+        And the longest sentence of the text should contain {sen_com_p} words. 
+        Also provide five options, and correct answer.'
+
+    else:
+        prompt = f'Please create a Main-Idea-Inference question.
+        The answer should encapsulate the overarching idea presented in the text.
+        Voca level should be {voca_p}. 
+        The topic should be among {topic_groups[group_index]}.
+        There should be {sen_len_p} sentences in the text.
+        And the longest sentence of the text should contain {sen_com_p} words.
+        And the sentence containing blank should carry main idea.
+        Also provide five options, and correct answer.'
+
+    return prompt
 
 # 토픽 그룹 목록 정의
 topic_groups = [
