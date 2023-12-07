@@ -240,21 +240,24 @@ def question():
     sen_len_p = round(sen_len * var_dict["Sentence Length"] + avg_dict["Sentence Length"])
     sen_com_p = round(sen_com * var_dict["Sentence Complexity"] + avg_dict["Sentence Complexity"])
 
-    prompt_template = make_prompt(voca_p, sen_len_p, sen_com_p, group_index)  
+    prompt_template = make_prompt(voca_p, sen_len_p, sen_com_p, group_index) 
+
+    def generate_new_question():
+        preference_type = get_pref_type(len(st.session_state.questions), ranked_preferences)
+        type_num = type_dict.get(preference_type)
+        if type_num is None:
+            raise ValueError(f"Invalid question type preference: {preference_type}")
+        new_question = generate_question(prompt_template[type_num], preference_type)
+        st.session_state.questions.append(new_question)
+        st.session_state.user_answers.append('')
+        st.session_state.current_index = len(st.session_state.questions) - 1
 
     left_column, right_column = st.columns([2, 1])
 
     with left_column:
         if st.button("Generate Question"):
-            if len(st.session_state.questions) < 10:  # test를 위해 임시로 3문제
-                preference_type = get_pref_type(len(st.session_state.questions), ranked_preferences)
-                type_num = type_dict.get(preference_type)
-                if type_num is None:
-                    raise ValueError(f"Invalid question type preference: {preference_type}")
-                new_question = generate_question(prompt_template[type_num], preference_type)
-                st.session_state.questions.append(new_question)
-                st.session_state.user_answers.append('')  # Append an empty string for each new question
-                st.session_state.current_index = len(st.session_state.questions) - 1
+            if len(st.session_state.questions) < 10: 
+                generate_new_question()
 
 
         if 'current_index' in st.session_state and st.session_state.current_index < len(st.session_state.questions):
@@ -278,28 +281,31 @@ def question():
                 key=f"answer{st.session_state.current_index}"
             )
 
-            # 선택된 답변의 인덱스를 구하고, 이를 유니코드 숫자로 변환
-            answer_index = options.index(selected_option)
-            unicode_answer = chr(9311 + answer_index + 1)
-
-            # 선택된 답변을 user_answers 리스트에 저장
-            if st.session_state.current_index < len(st.session_state.user_answers):
-                st.session_state.user_answers[st.session_state.current_index] = unicode_answer
+            if not selected_option:
+                if st.button("Regenerate"):
+                    if len(st.session_state.questions) > 0:
+                        st.session_state.questions.pop()  
+                        st.session_state.user_answers.pop()
+                        st.session_state.current_index = len(st.session_state.questions) - 1
+                        if len(st.session_state.questions) < 10: 
+                            generate_new_question()
+                            st.rerun()
             else:
-                # 아직 해당 인덱스에 답변이 없는 경우, 리스트에 추가
-                st.session_state.user_answers.append(unicode_answer)
+                # 선택된 답변의 인덱스를 구하고, 이를 유니코드 숫자로 변환
+                answer_index = options.index(selected_option)
+                unicode_answer = chr(9311 + answer_index + 1)
+
+                # 선택된 답변을 user_answers 리스트에 저장
+                if st.session_state.current_index < len(st.session_state.user_answers):
+                    st.session_state.user_answers[st.session_state.current_index] = unicode_answer
+                else:
+                    # 아직 해당 인덱스에 답변이 없는 경우, 리스트에 추가
+                    st.session_state.user_answers.append(unicode_answer)
 
         if st.button("Next Question"):
             if len(st.session_state.questions) < 10:
-                preference_type = get_pref_type(len(st.session_state.questions), ranked_preferences)
-                type_num = type_dict.get(preference_type)
-                if type_num is None:
-                    raise ValueError(f"Invalid question type preference: {preference_type}")
-                new_question = generate_question(prompt_template[type_num], preference_type)
-                st.session_state.questions.append(new_question)
-                st.session_state.user_answers.append('')
-                st.session_state.current_index = len(st.session_state.questions) - 1
-                st.experimental_rerun()
+                generate_new_question()
+                st.rerun()
 
         if len(st.session_state.questions) == 10 and all(st.session_state.user_answers):
             if st.button("Submit Answers"):
