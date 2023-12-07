@@ -86,7 +86,10 @@ def make_prompt(voca_p, sen_len_p, sen_com_p, group_index):
             The topic should be among {topic_groups[group_index]}.
             There should be {sen_len_p} sentences in the text.
             And the longest sentence of the text should contain {sen_com_p} words.
-            Also provide five options ①, ②, ③, ④, ⑤ and correct answer.''',
+            Also provide exactly five options for the blank, and indicate the correct answer. Show the answer in Unicode numbers.
+            Please insert a line break (\n\n) between the question and the options, and another line break (\n\n) between the options and the answer. Do not include line breaks (\n\n) elsewhere.
+            Only five options are required; do not provide more or fewer than five.
+            ''',
         
         2: f'''Please create a Fill-in-the-Blank-with-Multiple-Word question.
             The blank should encapsulate the overarching idea presented in the text. 
@@ -94,7 +97,10 @@ def make_prompt(voca_p, sen_len_p, sen_com_p, group_index):
             The topic should be among {topic_groups[group_index]}. 
             There should be {sen_len_p} sentences in the text. 
             And the longest sentence of the text should contain {sen_com_p} words. 
-            Also provide five options ①, ②, ③, ④, ⑤ and correct answer.''',
+            Also provide exactly five options for the blank, and indicate the correct answer. Show the answer in Unicode numbers.
+            Please insert a line break (\n\n) between the question and the options, and another line break (\n\n) between the options and the answer. Do not include line breaks (\n\n) elsewhere.
+            Only five options are required; do not provide more or fewer than five.
+            ''',
         
         3: f'''Please create a sequence-inference question
             Please provide the first two sentences, then divide the remaining text into three parts, with 2-3 sentences in each part. Shuffle them, and ask students to determine the logical sequence.
@@ -102,7 +108,10 @@ def make_prompt(voca_p, sen_len_p, sen_com_p, group_index):
             The topic should be among {topic_groups[group_index]}. 
             There should be {sen_len_p} sentences in the text.
             And the longest sentence of the text should contain {sen_com_p} words. 
-            Also provide five options ①, ②, ③, ④, ⑤ and correct answer.''',
+            Also provide exactly five options for the blank, and indicate the correct answer. Show the answer in Unicode numbers.
+            Please insert a line break (\n\n) between the question and the options, and another line break (\n\n) between the options and the answer. Do not include line breaks (\n\n) elsewhere.
+            Only five options are required; do not provide more or fewer than five.
+            ''',
 
         4: f'''Please create a Main-Idea-Inference question.
             The answer should encapsulate the overarching idea presented in the text.
@@ -111,7 +120,10 @@ def make_prompt(voca_p, sen_len_p, sen_com_p, group_index):
             There should be {sen_len_p} sentences in the text.
             And the longest sentence of the text should contain {sen_com_p} words.
             And the sentence containing blank should carry main idea.
-            Also provide five options ①, ②, ③, ④, ⑤ and correct answer.'''
+            Also provide exactly five options for the blank, and indicate the correct answer. Show the answer in Unicode numbers.
+            Please insert a line break (\n\n) between the question and the options, and another line break (\n\n) between the options and the answer. Do not include line breaks (\n\n) elsewhere.
+            Only five options are required; do not provide more or fewer than five.
+            '''
     }
 
     return prompt_template
@@ -154,7 +166,7 @@ def generate_question(detailed_prompt, preference_type):
     ]
     with st.spinner("Generating question..."):
         gpt_response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
+            model="ft:gpt-3.5-turbo-1106:personal::8QyMmFNj",
             messages=messages
         )
         response_content = gpt_response['choices'][0]['message']['content']
@@ -168,27 +180,23 @@ def generate_question(detailed_prompt, preference_type):
     }
 
 def parse_question_response(response_content):
-    lines = response_content.split('\n')
+    lines = response_content.split('\n\n')
     question_content = ""
     options = []
     correct_answer = ""
-    options_start = False
 
-    # 옵션을 추출하기 위한 정규 표현식 패턴
-    option_pattern = re.compile(r"^(①|②|③|④|⑤)\s*(.*)")
-
+    # 각 섹션을 파싱
     for line in lines:
-        # 옵션 시작을 확인
-        if option_pattern.match(line):
-            options_start = True
-            # 옵션 번호와 텍스트를 추출
-            match = option_pattern.match(line)
-            option_number = match.group(1)
-            option_text = match.group(2).strip()
-            options.append(f"{option_number} {option_text}")
-        elif line.lower().startswith("correct answer:"):
-            correct_answer = line.split(":", 1)[1].strip()
-        elif not options_start:
+        # 옵션 섹션 파싱
+        if line.startswith('[') and line.endswith(']'):
+            # 괄호 안의 내용을 쉼표로 분리하여 옵션 리스트 생성
+            options_text = line[1:-1]
+            options = [option.strip() for option in options_text.split(',')]
+            # 각 옵션 앞에 숫자를 붙임 (①, ②, ...)
+            options = [f"① {option}" if i == 0 else f"② {option}" if i == 1 else f"③ {option}" if i == 2 else f"④ {option}" if i == 3 else f"⑤ {option}" for i, option in enumerate(options)]
+        elif "①" in line or "②" in line or "③" in line or "④" in line or "⑤" in line:
+            correct_answer = line.strip()
+        else:
             question_content += line + "\n"
 
     return question_content.strip(), options, correct_answer
@@ -256,23 +264,30 @@ def question():
             st.write(current_question['question'])
             options = current_question['options']
             
-            # Directly access the user_answers list by index with proper bounds checking
+            # 이전에 저장된 답변을 불러오기
             if st.session_state.current_index < len(st.session_state.user_answers):
                 current_answer = st.session_state.user_answers[st.session_state.current_index]
             else:
                 current_answer = ''
-                
-            # Find the index of the current answer in the options list
-            answer_index = options.index(current_answer) if current_answer in options else 0
-            answer = st.radio(
+
+            # st.radio를 통해 사용자의 현재 선택을 얻기
+            selected_option = st.radio(
                 "Choose your answer:", 
                 options, 
-                index=answer_index, 
+                index=options.index(current_answer) if current_answer in options else 0,
                 key=f"answer{st.session_state.current_index}"
             )
-            # Save the selected answer to the user_answers list
+
+            # 선택된 답변의 인덱스를 구하고, 이를 유니코드 숫자로 변환
+            answer_index = options.index(selected_option)
+            unicode_answer = chr(9311 + answer_index + 1)
+
+            # 선택된 답변을 user_answers 리스트에 저장
             if st.session_state.current_index < len(st.session_state.user_answers):
-                st.session_state.user_answers[st.session_state.current_index] = answer
+                st.session_state.user_answers[st.session_state.current_index] = unicode_answer
+            else:
+                # 아직 해당 인덱스에 답변이 없는 경우, 리스트에 추가
+                st.session_state.user_answers.append(unicode_answer)
 
         if st.button("Next Question"):
             if len(st.session_state.questions) < 10:
@@ -300,7 +315,7 @@ def question():
 def calculate_score():
     # 최종 점수를 받아가는 변수 // 해당 점수를 참고하면 됨.
     score = sum([1 for i in range(len(st.session_state.questions))
-                 if st.session_state.questions[i]['correct_answer'] == st.session_state.user_answers[i]])
+                if st.session_state.questions[i]['correct_answer'] == st.session_state.user_answers[i]])
     total_questions = len(st.session_state.questions)
     
     st.write(f"You scored {score} out of {total_questions}", unsafe_allow_html=True)
