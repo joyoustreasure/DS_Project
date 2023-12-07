@@ -26,13 +26,13 @@ st.markdown("""
 /* General styles */
 body {
     font-family: 'Montserrat', sans-serif;
-    background-color: #f4f4f4;
-    color: #424242;
+    background-color: #121212; /* Darker background */
+    color: #E0E0E0; /* Lighter text color for better readability */
 }
 
 /* Styling for headers */
 h1, h2, h3, h4, h5, h6 {
-    color: #005792;
+    color: #1E88E5; /* Updated to blue color */
     font-weight: 700;
 }
 
@@ -50,19 +50,19 @@ h3 {
 
 /* Input widgets styling */
 .stTextInput, .stSelectbox, .stTextArea {
-    border: 2px solid #005792;
+    border: 2px solid #1E88E5; /* Border color changed to blue */
     border-radius: 8px;
     padding: 10px;
     font-size: 16px;
-    background-color: #ffffff;
-    color: #333333;
+    background-color: #424242; /* Darker background for inputs */
+    color: #E0E0E0; /* Lighter text color */
 }
 
 /* Button styling */
 .stButton > button {
-    border: 2px solid #005792;
-    background-color: #005792;
-    color: #ffffff;
+    border: 2px solid #1E88E5;
+    background-color: #1E88E5;
+    color: #ffffff; /* Changed text color to white */
     font-weight: bold;
     border-radius: 20px;
     padding: 10px 20px;
@@ -71,17 +71,17 @@ h3 {
 }
 
 .stButton > button:hover {
-    background-color: #007acc;
-    color: #f0f0f0;
+    background-color: #2196F3; /* Lighter shade of blue for hover effect */
+    color: #ffffff;
 }
 
 /* Additional styling for layout and other elements */
 .st-bb {
-    border-bottom: 2px solid #005792 !important;
+    border-bottom: 2px solid #1E88E5 !important;
 }
 
 .st-at {
-    color: #005792;
+    color: #1E88E5;
     font-weight: bold;
 }
 
@@ -93,6 +93,8 @@ h3 {
 }
 </style>
 """, unsafe_allow_html=True)
+
+
 
 
 # 세션 상태 초기화
