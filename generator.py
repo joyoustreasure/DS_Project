@@ -164,7 +164,7 @@ def generate_question(detailed_prompt, preference_type):
         {"role": "system", "content": "You are a high school English test question designer."},
         {"role": "user", "content": detailed_prompt}
     ]
-    with st.spinner("Generating question..."):
+    with st.spinner("generating question now..."):
         gpt_response = openai.ChatCompletion.create(
             model="ft:gpt-3.5-turbo-1106:personal::8QyMmFNj",
             messages=messages
@@ -251,19 +251,20 @@ def question():
         st.session_state.questions.append(new_question)
         st.session_state.user_answers.append('')
         st.session_state.current_index = len(st.session_state.questions) - 1
+        st.experimental_rerun()
 
     left_column, right_column = st.columns([2, 1])
 
     with left_column:
+        # 'Generate Question' 버튼은 'Next Question'과 'Regenerate' 버튼 위에 위치합니다.
         if st.button("Generate Question"):
             if len(st.session_state.questions) < 10: 
                 generate_new_question()
 
-
+        # 질문과 답변 옵션을 보여줍니다.
         if 'current_index' in st.session_state and st.session_state.current_index < len(st.session_state.questions):
             current_question = st.session_state.questions[st.session_state.current_index]
             st.write(f"[Question {st.session_state.current_index + 1}]")
-            st.write(f"Question Type : {current_question['question_type']}")
             st.write(current_question['question'])
             options = current_question['options']
             
@@ -281,47 +282,55 @@ def question():
                 key=f"answer{st.session_state.current_index}"
             )
 
-            if not selected_option:
-                if st.button("Regenerate"):
-                    if len(st.session_state.questions) > 0:
-                        st.session_state.questions.pop()  
-                        st.session_state.user_answers.pop()
-                        st.session_state.current_index = len(st.session_state.questions) - 1
-                        if len(st.session_state.questions) < 10: 
-                            generate_new_question()
-                            st.rerun()
-            else:
-                # 선택된 답변의 인덱스를 구하고, 이를 유니코드 숫자로 변환
-                answer_index = options.index(selected_option)
-                unicode_answer = chr(9311 + answer_index + 1)
-
-                # 선택된 답변을 user_answers 리스트에 저장
+            # 선택된 답변을 user_answers 리스트에 저장
+            if selected_option and selected_option in options:
                 if st.session_state.current_index < len(st.session_state.user_answers):
-                    st.session_state.user_answers[st.session_state.current_index] = unicode_answer
+                    st.session_state.user_answers[st.session_state.current_index] = selected_option
                 else:
-                    # 아직 해당 인덱스에 답변이 없는 경우, 리스트에 추가
-                    st.session_state.user_answers.append(unicode_answer)
+                    st.session_state.user_answers.append(selected_option)
 
-        if st.button("Next Question"):
-            if len(st.session_state.questions) < 10:
-                generate_new_question()
-                st.rerun()
+        # 'Next Question'과 'Regenerate' 버튼을 나란히 배치합니다.
+        button_columns = st.columns([1, 1, 1])
+        
+        with button_columns[0]:  # 'Next Question' 버튼을 왼쪽에 배치합니다.
+            if st.button("Next Question"):
+                if len(st.session_state.questions) < 10:
+                    generate_new_question()
 
+        with button_columns[1]:  # 'Regenerate' 버튼을 오른쪽에 배치합니다.
+            if st.button("Regenerate"):
+                if len(st.session_state.questions) > 0:
+                    st.session_state.questions.pop()  
+                    st.session_state.user_answers.pop()
+                    st.session_state.current_index = len(st.session_state.questions) - 1
+                    if len(st.session_state.questions) < 10: 
+                        generate_new_question()
+
+        # 사용자가 모든 문제에 답변하면 'Submit Answers' 버튼을 보여줍니다.
         if len(st.session_state.questions) == 10 and all(st.session_state.user_answers):
             if st.button("Submit Answers"):
                 calculate_score()
+            
 
     with right_column:
         st.subheader("Saved Questions")
         for i, saved_question in enumerate(st.session_state.questions):
-            if st.button(f"Question {i + 1}"):
-                st.session_state.current_index = i
-                st.experimental_rerun()
+            if i <9:
+                if st.button(f"Question 0{i + 1} created by {username}"):
+                    st.session_state.current_index = i
+                    st.experimental_rerun()
+            else:
+                if st.button(f"Question {i + 1} created by {username}"):
+                    st.session_state.current_index = i
+                    st.experimental_rerun()
 
 def calculate_score():
     # 최종 점수를 받아가는 변수 // 해당 점수를 참고하면 됨.
-    score = sum([1 for i in range(len(st.session_state.questions))
-                if st.session_state.questions[i]['correct_answer'] == st.session_state.user_answers[i]])
+    score = 0
+    for i in range(len(st.session_state.questions)):
+        user_answer = st.session_state.user_answers[i].split(' ')[0] if st.session_state.user_answers[i] else ''
+        if st.session_state.questions[i]['correct_answer'] == user_answer:
+            score += 1
     total_questions = len(st.session_state.questions)
     
     st.write(f"You scored {score} out of {total_questions}", unsafe_allow_html=True)
