@@ -8,6 +8,7 @@ from print import print_exam
 import feedback
 from account import update_profile_page
 from mongodb_utils import connect_to_mongodb
+from listening import create_listening_questions
 
 users_collection = connect_to_mongodb("users")
 
@@ -221,7 +222,7 @@ else:
     st.sidebar.title("Menu")
     app_choice = st.sidebar.radio(
         "Choose the App", 
-        ["Home 🏡", "Create Questions 📝", "Print Exam 🖨️", "Frequently Asked Questions ❓", "Question Type Examples 📚", "User Feedback 🗣️", "Update Profile 🔑"]
+        ["Home 🏡", "Create Questions 📝", "Create Listening Questions 🎧","Print Exam 🖨️", "Frequently Asked Questions ❓", "Question Type Examples 📚", "User Feedback 🗣️", "Update Profile 🔑"]
     )
 
     # 홈 화면 내용을 표시합니다.
@@ -248,6 +249,12 @@ else:
     elif app_choice == "Create Questions 📝":
         st.title("📘 CSAT English Question Generator")
         question()
+
+    elif app_choice == "Create Listening Questions 🎧":
+        # 새로운 듣기 문제 생성 기능
+        st.title("🎧 CSAT English Listening Question Generator")
+        create_listening_questions()
+    
     elif app_choice == "Print Exam 🖨️":
         st.title("🖨️ Print Exam")
         st.write("Review and print your created exam.")
