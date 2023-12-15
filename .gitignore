@@ -111,3 +111,5 @@ frontend/cypress/snapshots/linux/1x
 # VSCode
 ########################################################################
 .vscode/
+
+audio/
