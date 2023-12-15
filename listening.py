@@ -1,36 +1,77 @@
 import streamlit as st
 from pathlib import Path
 from openai import OpenAI
+import os
+from pydub import AudioSegment
+import random
+from mongodb_utils import connect_to_mongodb
 
 # OpenAI 클라이언트 초기화
 client = OpenAI(api_key=st.secrets["api_key"])
 
-def text_to_speech(text, model="tts-1", voice="alloy"):
-    response = client.audio.speech.create(
-        model=model,
-        voice=voice,
-        input=text
-    )
+quiz_collection = connect_to_mongodb("quiz")
 
-    # Streamlit의 임시 디렉토리에 오디오 파일 저장 및 파일 경로 반환
-    speech_file_path = Path(st.secrets["temp_dir"]) / "speech.mp3"
-    response.stream_to_file(speech_file_path)
-    return speech_file_path.as_posix()
+def get_script():
+    year = random.randint(2015, 2023)
+    months = [6, 9, 11]
+    month = random.choice(months)    
+    number = random.randint(1, 17)
+    
+    tag = f'{year}_{month:02d}'
+    query = { 'tag': tag, 'number': number }
+
+    result = quiz_collection.find_one(query)
+    question = result.get('question') 
+    script = result.get('script')
+    options = result.get('options')
+    answer = result.get('answer')
+    print(f'tag: {tag}, number: {number}, question: {question}, options: {options}, answer: {answer}, script: {script}')
+
+    return question, script, options, answer
+
+def text_to_speech(dialogue, model="tts-1"):
+
+    for i, sentence in enumerate(dialogue):
+        if sentence.startswith('W:'):
+            voice = "nova"
+            text = sentence[2:]
+        elif sentence.startswith('M:'):
+            voice = "onyx"
+            text = sentence[2:]
+        else:
+            voice = "nova"
+            text = sentence
+
+        response = client.audio.speech.create(
+            model=model,
+            voice=voice,
+            input=text
+        )
+
+        speech_file_path = Path(st.secrets["audio_dir"]) / f"dialogue_{i}.mp3"
+        response.stream_to_file(speech_file_path)
+
+def play_audio_files(audio_folder_path):
+    audio_files = [f for f in os.listdir(audio_folder_path) if f.endswith(".mp3")]
+
+    if not audio_files:
+        st.warning("No audio files found in the specified directory.")
+        return
+
+    audio_segments = [AudioSegment.from_file(os.path.join(audio_folder_path, audio_file)) for audio_file in audio_files]
+    combined = sum(audio_segments)
+    
+    audio_bytes = combined.export(format="mp3").read()
+    st.audio(audio_bytes, format="audio/mp3")
 
 def create_listening_questions():
-    # 음성 선택 옵션
-    voice_options = ['nova', 'shimmer', 'echo', 'onyx', 'fable', 'alloy']
-    selected_voice = st.selectbox('Choose a voice:', voice_options)
-
-    # 사용자로부터 텍스트 입력 받기
-    user_input = st.text_area("Enter text for TTS conversion:")
-
     # TTS 변환 버튼
     tts_button = st.button('Convert Text to Speech')
 
     # TTS 변환 수행
-    if tts_button and user_input:
+    if tts_button:
         with st.spinner('Converting text to audio...'):
+            question, script, options, answer = get_script()
             # 여기서 `model` 매개변수를 명시적으로 전달
-            audio_data = text_to_speech(user_input, model="tts-1", voice=selected_voice)
-            st.audio(audio_data) 
+            text_to_speech(script, model="tts-1")
+            play_audio_files(st.secrets["audio_dir"])
