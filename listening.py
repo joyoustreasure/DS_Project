@@ -64,6 +64,10 @@ def play_audio_files(audio_folder_path):
     audio_bytes = combined.export(format="mp3").read()
     st.audio(audio_bytes, format="audio/mp3")
 
+    # 생성된 오디오 파일 삭제
+    for audio_file in audio_files:
+        os.remove(os.path.join(audio_folder_path, audio_file))
+
 def create_listening_questions():
     # TTS 변환 버튼
     tts_button = st.button('Convert Text to Speech')
