@@ -165,11 +165,11 @@ def generate_question(detailed_prompt, preference_type):
         {"role": "user", "content": detailed_prompt}
     ]
     with st.spinner("generating question now..."):
-        gpt_response = openai.ChatCompletion.create(
+        gpt_response = openai.chat.completions.create(
             model="ft:gpt-3.5-turbo-1106:personal::8QyMmFNj",
             messages=messages
         )
-        response_content = gpt_response['choices'][0]['message']['content']
+        response_content = gpt_response.choices[0].message.content
         question_content, options, correct_answer = parse_question_response(response_content)
 
     return {

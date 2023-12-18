@@ -69,13 +69,36 @@ def play_audio_files(audio_folder_path):
         os.remove(os.path.join(audio_folder_path, audio_file))
 
 def create_listening_questions():
-    # TTS 변환 버튼
+    if 'tts_button_clicked' not in st.session_state:
+        st.session_state.tts_button_clicked = False
+
     tts_button = st.button('Convert Text to Speech')
 
-    # TTS 변환 수행
     if tts_button:
+        st.session_state.tts_button_clicked = True
         with st.spinner('Converting text to audio...'):
-            question, script, options, answer = get_script()
-            # 여기서 `model` 매개변수를 명시적으로 전달
+            st.session_state.question, script, st.session_state.options, st.session_state.answer = get_script()
             text_to_speech(script, model="tts-1")
             play_audio_files(st.secrets["audio_dir"])
+
+    if st.session_state.question:
+        st.subheader("Listening Question")
+        st.write(st.session_state.question)
+
+        # 선택지에 숫자를 붙여 표시
+        if 'options' in st.session_state:
+            numbered_options = [f"① {st.session_state.options[0]}", f"② {st.session_state.options[1]}", 
+                                f"③ {st.session_state.options[2]}", f"④ {st.session_state.options[3]}", 
+                                f"⑤ {st.session_state.options[4]}"]
+            option_selected = st.radio("Choose your answer:", numbered_options, key="option_radio")
+
+            if st.button("Check Answer"):
+                # 정답 확인
+                if option_selected.startswith(st.session_state.answer):
+                    st.success("Correct!")
+                else:
+                    st.error("Incorrect. Try again!")
+
+
+
+
