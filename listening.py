@@ -81,23 +81,28 @@ def create_listening_questions():
             text_to_speech(script, model="tts-1")
             play_audio_files(st.secrets["audio_dir"])
 
-    if st.session_state.question:
+    if 'question' in st.session_state:
         st.subheader("Listening Question")
         st.write(st.session_state.question)
 
-        # 선택지에 숫자를 붙여 표시
-        if 'options' in st.session_state:
-            numbered_options = [f"① {st.session_state.options[0]}", f"② {st.session_state.options[1]}", 
-                                f"③ {st.session_state.options[2]}", f"④ {st.session_state.options[3]}", 
-                                f"⑤ {st.session_state.options[4]}"]
+        if 'options' in st.session_state and len(st.session_state.options) >= 5:
+            numbered_options = [
+                f"① {st.session_state.options[0]}", 
+                f"② {st.session_state.options[1]}", 
+                f"③ {st.session_state.options[2]}", 
+                f"④ {st.session_state.options[3]}", 
+                f"⑤ {st.session_state.options[4]}"
+            ]
             option_selected = st.radio("Choose your answer:", numbered_options, key="option_radio")
 
             if st.button("Check Answer"):
-                # 정답 확인
                 if option_selected.startswith(st.session_state.answer):
                     st.success("Correct!")
                 else:
                     st.error("Incorrect. Try again!")
+        else:
+            st.error("Not enough options available for this question.")
+
 
 
 
