@@ -15,8 +15,7 @@ def get_script():
     year = random.randint(2015, 2023)
     months = [6, 9, 11]
     month = random.choice(months)    
-    num_list = [1, 2, 3, 5, 7, 11, 13, 14, 15, 16, 17]
-    number = random.choice(num_list)
+    number = random.randint(1, 17)
     
     tag = f'{year}_{month:02d}'
     query = { 'tag': tag, 'number': number }
@@ -26,6 +25,7 @@ def get_script():
     script = result.get('script')
     options = result.get('options')
     answer = result.get('answer')
+    print(f'tag: {tag}, number: {number}, question: {question}, options: {options}, answer: {answer}, script: {script}')
 
     return question, script, options, answer
 
@@ -77,32 +77,29 @@ def create_listening_questions():
     if tts_button:
         st.session_state.tts_button_clicked = True
         with st.spinner('Converting text to audio...'):
-            st.session_state.question, script, st.session_state.options, st.session_state.answer = get_script()
-            text_to_speech(script, model="tts-1")
-            play_audio_files(st.secrets["audio_dir"])
+            question_script = get_script()
+            if question_script is not None:
+                st.session_state.question, script, st.session_state.options, st.session_state.answer = question_script
+                text_to_speech(script, model="tts-1")
+                play_audio_files(st.secrets["audio_dir"])
 
-    if 'question' in st.session_state:
+    if 'question' in st.session_state and st.session_state.question:
         st.subheader("Listening Question")
         st.write(st.session_state.question)
 
-        if 'options' in st.session_state and len(st.session_state.options) >= 5:
-            numbered_options = [
-                f"① {st.session_state.options[0]}", 
-                f"② {st.session_state.options[1]}", 
-                f"③ {st.session_state.options[2]}", 
-                f"④ {st.session_state.options[3]}", 
-                f"⑤ {st.session_state.options[4]}"
-            ]
+        # 선택지에 숫자를 붙여 표시
+        if 'options' in st.session_state:
+            numbered_options = [f"① {st.session_state.options[0]}", f"② {st.session_state.options[1]}", 
+                                f"③ {st.session_state.options[2]}", f"④ {st.session_state.options[3]}", 
+                                f"⑤ {st.session_state.options[4]}"]
             option_selected = st.radio("Choose your answer:", numbered_options, key="option_radio")
 
             if st.button("Check Answer"):
+                # 정답 확인
                 if option_selected.startswith(st.session_state.answer):
                     st.success("Correct!")
                 else:
                     st.error("Incorrect. Try again!")
-        else:
-            st.error("Not enough options available for this question.")
-
 
 
 
