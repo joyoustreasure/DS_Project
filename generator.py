@@ -2,7 +2,6 @@
 
 import streamlit as st
 import openai
-import re
 from mongodb_utils import connect_to_mongodb
 
 # Custom button style with HTML and CSS
