@@ -25,7 +25,6 @@ def get_script():
     script = result.get('script')
     options = result.get('options')
     answer = result.get('answer')
-    print(f'tag: {tag}, number: {number}, question: {question}, options: {options}, answer: {answer}, script: {script}')
 
     return question, script, options, answer
 
