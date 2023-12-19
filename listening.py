@@ -25,7 +25,7 @@ def get_script():
     script = result.get('script')
     options = result.get('options')
     answer = result.get('answer')
-    print(f'tag: {tag}, number: {number}, question: {question}, options: {options}, answer: {answer}, script: {script}')
+    # print(f'tag: {tag}, number: {number}, question: {question}, options: {options}, answer: {answer}, script: {script}')
 
     return question, script, options, answer
 
@@ -64,7 +64,6 @@ def play_audio_files(audio_folder_path):
     audio_bytes = combined.export(format="mp3").read()
     st.audio(audio_bytes, format="audio/mp3")
 
-    # 생성된 오디오 파일 삭제
     for audio_file in audio_files:
         os.remove(os.path.join(audio_folder_path, audio_file))
 
