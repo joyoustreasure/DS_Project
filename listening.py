@@ -15,7 +15,8 @@ def get_script():
     year = random.randint(2015, 2023)
     months = [6, 9, 11]
     month = random.choice(months)    
-    number = random.randint(1, 17)
+    num_list = [1, 2, 3, 5, 7, 11, 13, 14, 15, 16, 17]
+    number = random.choice(num_list)
     
     tag = f'{year}_{month:02d}'
     query = { 'tag': tag, 'number': number }
