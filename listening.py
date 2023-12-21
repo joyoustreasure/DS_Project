@@ -71,6 +71,12 @@ def play_audio_files(audio_folder_path):
 def create_listening_questions():
     if 'tts_button_clicked' not in st.session_state:
         st.session_state.tts_button_clicked = False
+    if 'question' not in st.session_state:
+        st.session_state['question'] = ''
+    if 'options' not in st.session_state:
+        st.session_state['options'] = ''
+    if 'options' not in st.session_state:
+        st.session_state['answer'] = ''
 
     tts_button = st.button('Convert Text to Speech')
 
