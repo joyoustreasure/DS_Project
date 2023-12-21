@@ -201,16 +201,16 @@ def parse_question_response(response_content):
     return question_content.strip(), options, correct_answer
 
 
-# session_state 초기화 확인
-if 'questions' not in st.session_state:
-    st.session_state.questions = []
-if 'current_index' not in st.session_state:
-    st.session_state.current_index = 0
-if 'user_answers' not in st.session_state:
-    st.session_state.user_answers = []  # This should be a list, as you are accessing it by index
 
 # 메인 함수: 문제 생성 및 네비게이션 관리
-def question():
+def question():    
+    # session_state 초기화 확인
+    if 'questions' not in st.session_state:
+        st.session_state.questions = []
+    if 'current_index' not in st.session_state:
+        st.session_state.current_index = 0
+    if 'user_answers' not in st.session_state:
+        st.session_state.user_answers = []  # This should be a list, as you are accessing it by index
     
     # 사용자 이름 가져오기
     username = st.session_state.get('username')
