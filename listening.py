@@ -50,6 +50,7 @@ def text_to_speech(dialogue, model="tts-1"):
         )
 
         speech_file_path = Path(st.secrets["audio_dir"]) / f"dialogue_{i}.mp3"
+        speech_file_path.parent.mkdir(parents=True, exist_ok=True)  
         response.stream_to_file(speech_file_path)
 
 def play_audio_files(audio_folder_path):
